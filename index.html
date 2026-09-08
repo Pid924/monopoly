@@ -54,7 +54,7 @@ body{font-family:'Georgia','Noto Sans Thai',serif;background:#2d5016;min-height:
 .cell-tax{background:#f3e5f5}
 
 /* center */
-#center{transform-style:preserve-3d;grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#f5f0dc;padding:10px}
+#center{transform-style:preserve-3d;position:relative;z-index:1;grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#f5f0dc;padding:10px}
 #center-logo{font-size:44px;font-weight:700;color:#1b3a0a;letter-spacing:7px;text-transform:uppercase;font-style:italic;text-align:center;line-height:1.1;border:4px solid #1b3a0a;padding:10px 24px}
 #center-sub{font-size:11px;letter-spacing:3px;color:#555;text-transform:uppercase}
 #dice-area{display:flex;gap:24px;margin-top:10px;perspective:400px;transform-style:preserve-3d}
@@ -72,8 +72,8 @@ body{font-family:'Georgia','Noto Sans Thai',serif;background:#2d5016;min-height:
 .die-wrap::after{
   content:'';position:absolute;left:8%;top:78%;width:84%;height:16px;
   background:rgba(0,0,0,.32);filter:blur(6px);border-radius:50%;
-  transform:translateZ(calc(-1 * var(--dice-lift,0px)));
-  opacity:var(--dice-shadow,0);transition:opacity .6s;z-index:-1;
+  transform:translateZ(calc(-1 * var(--dice-lift,0px) - 1px));
+  opacity:var(--dice-shadow,0);transition:opacity .6s;pointer-events:none;
 }
 .die-inner{
   width:56px;height:56px;
@@ -162,7 +162,9 @@ body{font-family:'Georgia','Noto Sans Thai',serif;background:#2d5016;min-height:
 .piece::after{
   content:'';position:absolute;left:15%;top:64%;width:70%;height:9px;
   background:rgba(0,0,0,.4);filter:blur(4px);border-radius:50%;
-  opacity:var(--tok-solid,0);transition:opacity .6s;z-index:-1;
+  opacity:var(--tok-solid,0);transition:opacity .6s;
+  transform:translateZ(-2px);          /* real depth, not z-index */
+  pointer-events:none;
 }
 @keyframes hop{0%{transform:scale(1) translateY(0)}40%{transform:scale(1.35) translateY(-16px)}100%{transform:scale(1) translateY(0)}}
 
@@ -259,19 +261,21 @@ button:disabled{opacity:.35;cursor:default}
   transform:translateZ(-18px);
   background:#8B6914;
   border-radius:3px;
-  z-index:-1;
+  pointer-events:none;
   box-shadow:0 0 0 3px #6B4F10;
 }
-/* ground shadow */
-#board-container.view3d::before{
-  content:'';
-  position:absolute;
-  bottom:-50px;left:5%;width:90%;height:40px;
-  background:rgba(0,0,0,.3);
-  filter:blur(18px);
-  border-radius:50%;
-  z-index:-2;
+/* ground shadow – lives on the wrapper, OUTSIDE the preserve-3d context,
+   so ordinary z-index still applies and it can never paint over the board */
+#board-wrap{position:relative}
+#board-wrap::after{
+  content:'';position:absolute;
+  bottom:-34px;left:6%;width:88%;height:38px;
+  background:rgba(0,0,0,.32);
+  filter:blur(18px);border-radius:50%;
+  opacity:0;transition:opacity .6s;
+  pointer-events:none;z-index:0;
 }
+#board-wrap.is3d::after{opacity:1}
 
 /* language bar */
 #lang-bar{display:flex;gap:4px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
@@ -293,6 +297,70 @@ button:disabled{opacity:.35;cursor:default}
 }
 #lang-bar-game button:hover{background:#1b3a0a;color:#f5f0dc}
 #lang-bar-game button.active{background:#1b3a0a;color:#f5f0dc}
+
+
+/* ══ RESPONSIVE ══
+   The board is a fixed 782px grid (piece positions are computed in px),
+   so instead of reflowing it we scale the whole scene to fit. */
+#board-wrap{flex-shrink:0}
+#scene{transform-origin:top left}
+
+@media (max-width:1040px){
+  #ui{flex-direction:column;align-items:center}
+  #panel{width:100%;max-width:782px;min-height:0}
+  #log{flex:0 0 auto;height:160px}
+  .tb-brand{font-size:15px;letter-spacing:2px}
+}
+
+@media (max-width:720px){
+  body{padding:8px 8px 14px;gap:8px}
+  #topbar{gap:6px;padding:7px 8px;justify-content:center}
+  .tb-brand{width:100%;text-align:center;margin-right:0;font-size:14px;letter-spacing:2px}
+  .tb-group{flex:1;justify-content:center}
+  .tb-group button{padding:6px 8px;font-size:10px}
+  #lang-bar-game button{padding:6px 7px;font-size:10px}
+  #log{height:140px;font-size:10px}
+  .pcard{font-size:11px;padding:7px 9px}
+  .pcard .pview{display:none}          /* tap target is the whole card anyway */
+  #setup{width:100%;max-width:320px}
+  #card-box{width:92vw;max-width:320px}
+  #portfolio-box{width:92vw;max-width:340px}
+  #room-code{font-size:26px;letter-spacing:6px}
+}
+
+/* the board is scaled down on phones, so bump its type to compensate.
+   Prices are dropped to give the names room – tap any square for the full deed. */
+@media (max-width:720px){
+  .cell .cname{font-size:10.5px;line-height:1.12}
+  .cell .cprice{display:none}
+  .cell .cicon{font-size:24px}
+  .corner .corner-label{font-size:15px;line-height:1.15}
+  .corner .corner-icon{font-size:40px;margin-bottom:2px}
+  .corner .corner-label span{font-size:11px !important}
+  #center-logo{font-size:56px;letter-spacing:8px;padding:12px 28px}
+  #center-sub{font-size:15px}
+  .center-roll{font-size:22px;padding:14px 34px;letter-spacing:2px}
+  #turn-hint{font-size:15px}
+  .die-wrap{width:70px;height:70px}
+  .piece{width:34px;height:34px;font-size:21px}
+}
+
+@media (max-width:420px){
+  #topbar{padding:6px}
+  .tb-group button{padding:5px 6px;font-size:9px}
+  #log{height:120px}
+  #toast{font-size:12px;padding:8px 14px;max-width:92vw;white-space:normal;text-align:center}
+}
+
+/* bigger tap targets on touch devices */
+@media (hover:none){
+  #dice-area{padding:10px 14px}
+  .center-roll{padding:11px 30px;font-size:15px}
+  .cell.inspectable:hover{filter:none}       /* no sticky hover on touch */
+  .cell.inspectable:hover::before{content:none}
+  #card-close,#card-alt{padding:12px 0}
+  .pp-sell-btn{padding:9px 0}
+}
 
 /* ── TOP TOOLBAR ── */
 #topbar{
@@ -336,6 +404,7 @@ button:disabled{opacity:.35;cursor:default}
   50%    {box-shadow:0 0 0 7px rgba(27,58,10,.10)}
 }
 .center-roll{
+  position:relative;transform:translateZ(1px);
   margin-top:12px;padding:9px 26px;font-size:14px;
   background:#1b3a0a;color:#f5f0dc;border:2px solid #1b3a0a;border-radius:6px;
   font-family:'Georgia',serif;font-weight:700;letter-spacing:1.5px;
@@ -634,6 +703,7 @@ button:disabled{opacity:.35;cursor:default}
 const LANGS={
   en:{_name:'English', _flag:'🇬🇧',
     title:'Monopoly', howMany:'How many players?',
+    youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
     shareCode:'Share this code with your friends', waitHost:'Connected. Waiting for the host to start…',
@@ -682,6 +752,7 @@ const LANGS={
   },
   th:{_name:'ไทย', _flag:'🇹🇭',
     title:'เกมเศรษฐี', howMany:'มีผู้เล่นกี่คน?',
+    youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
     shareCode:'ส่งรหัสนี้ให้เพื่อนของคุณ', waitHost:'เชื่อมต่อแล้ว รอเจ้าของห้องเริ่มเกม…',
@@ -730,6 +801,7 @@ const LANGS={
   },
   de:{_name:'Deutsch', _flag:'🇩🇪',
     title:'Monopoly', howMany:'Wie viele Spieler?',
+    youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
     shareCode:'Teile diesen Code mit deinen Freunden', waitHost:'Verbunden. Warten auf den Host…',
@@ -778,6 +850,7 @@ const LANGS={
   },
   nl:{_name:'Nederlands', _flag:'🇳🇱',
     title:'Monopoly', howMany:'Hoeveel spelers?',
+    youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
     shareCode:'Deel deze code met je vrienden', waitHost:'Verbonden. Wachten tot de host start…',
@@ -867,6 +940,7 @@ function setLang(code){
     renderPlayers();
     updateRollLabel();
     applyBoardRotation();
+    fitBoard();
   }
   if(lastEvent) showEvent(lastEvent.opts, lastEvent.onOk, lastEvent.onAlt, true); // retranslate live popup, silently
   if(portfolioOpen&&portfolioOpen()) openPortfolio(portfolioPlayer);
@@ -1074,6 +1148,7 @@ const NET={
   roomId:null,
   lobby:[],            // host: [{seat,name,conn}]
   myName:'',
+  hostName:'',
   transport:null,      // test hook – lets the suite swap PeerJS out
 
   isHost(){ return this.mode==='host'; },
@@ -1143,8 +1218,9 @@ function hostHandle(msg,conn){
     const seat=NET.lobby.length+1;              // host is seat 0
     if(seat>5){ if(conn&&conn.send) conn.send({t:'full'}); return; }
     NET.lobby.push({seat,name:msg.name||('Player '+(seat+1)),conn});
-    if(conn&&conn.send) conn.send({t:'seat',seat,name:msg.name});
-    NET.broadcast({t:'lobby',list:NET.lobby.map(l=>({seat:l.seat,name:l.name}))});
+    if(conn&&conn.send) conn.send({t:'seat',seat,name:msg.name,host:NET.hostName});
+    NET.broadcast({t:'lobby',host:NET.hostName,
+                   list:NET.lobby.map(l=>({seat:l.seat,name:l.name}))});
     renderLobby();
     return;
   }
@@ -1161,8 +1237,8 @@ function hostHandle(msg,conn){
 
 function clientHandle(msg){
   switch(msg.t){
-    case 'seat':   NET.seat=msg.seat; renderLobby(); break;
-    case 'lobby':  NET.lobby=msg.list; renderLobby(); break;
+    case 'seat':   NET.seat=msg.seat; NET.hostName=msg.host||NET.hostName; renderLobby(); break;
+    case 'lobby':  NET.lobby=msg.list; NET.hostName=msg.host||DEFAULT_NAMES[0]; renderLobby(); break;
     case 'start':  netStartGame(msg); break;
     case 'sync':   applySnapshot(msg.s); break;
     case 'log':    addLog(msg.m,msg.c); break;
@@ -1186,7 +1262,8 @@ function makeRoomCode(){
 function hostRoom(){
   if(typeof Peer==='undefined'){ netStatus(t('netNoLib'),'err'); return; }
   NET.mode='host'; NET.seat=0;
-  NET.myName=(document.getElementById('online-name')||{}).value||'';
+  NET.myName=((document.getElementById('online-name')||{}).value||'').trim()||DEFAULT_NAMES[0];
+  NET.hostName=NET.myName;
   const code=makeRoomCode();
   NET.roomId=code;
   netStatus(t('netConnecting'));
@@ -1215,7 +1292,7 @@ function joinRoom(){
   const code=(document.getElementById('join-code').value||'').trim().toUpperCase();
   if(code.length<4){ netStatus(t('netBadCode'),'err'); return; }
   NET.mode='client';
-  NET.myName=(document.getElementById('online-name')||{}).value||'';
+  NET.myName=((document.getElementById('online-name')||{}).value||'').trim();
   netStatus(t('netConnecting'));
   NET.peer=new Peer({debug:0});
   NET.peer.on('open',()=>{
@@ -1242,18 +1319,21 @@ function netStatus(msg,cls){
 
 /* ── LOBBY ──────────────────────────────────────────────────── */
 function renderLobby(){
-  const list=document.getElementById('lobby-list');
-  if(!list) return;
-  const seats=[];
-  seats.push({seat:0,name:NET.isHost()?(NET.myName||DEFAULT_NAMES[0]):(NET.lobby.hostName||DEFAULT_NAMES[0]),host:true});
-  NET.lobby.forEach(l=>seats.push({seat:l.seat,name:l.name}));
-  list.innerHTML=seats.map(s=>
+  const seats=[{seat:0,name:NET.hostName||DEFAULT_NAMES[0],host:true}];
+  NET.lobby.forEach(l=>seats.push({seat:l.seat,name:l.name||DEFAULT_NAMES[l.seat]}));
+  const html=seats.map(s=>
     `<div class="lobby-row">
        <span class="psetup-token" style="background:${PCOLORS[s.seat]}">${PAVATAR[s.seat]}</span>
-       <span class="lobby-name">${s.name}${s.host?' <em>('+t('hostTag')+')</em>':''}${s.seat===NET.seat?' ◀':''}</span>
+       <span class="lobby-name">${s.name}${s.host?' <em>('+t('hostTag')+')</em>':''}${s.seat===NET.seat?' ◀ '+t('youTag'):''}</span>
      </div>`).join('');
+  // both lobbies exist in the DOM; fill whichever is showing
+  ['lobby-list','lobby-list-c'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=html;
+  });
   const cnt=document.getElementById('lobby-count');
   if(cnt) cnt.textContent=seats.length+' / 6';
+  const sb=document.getElementById('btn-start-online');
+  if(sb) sb.textContent=t('startGameOnline')+' ('+seats.length+')';
 }
 
 /* host presses Start: fill empty seats with AI and launch everywhere */
@@ -1478,9 +1558,9 @@ function renderPlayerSetup(){
 }
 
 function beginGame(){
-  document.getElementById('setup').remove();
-  document.getElementById('players-info').style.display='flex';
-  document.getElementById('log').style.display='flex';
+  const su=document.getElementById('setup'); if(su) su.remove();
+  const pi=document.getElementById('players-info'); if(pi) pi.style.display='flex';
+  const lg=document.getElementById('log');          if(lg) lg.style.display='flex';
   players=Array.from({length:setupCount},(_,i)=>({
     name:pLabel(i),color:PCOLORS[i],initial:PAVATAR[i],
     isAI:setupTypes[i]==='ai',
@@ -1492,6 +1572,7 @@ function beginGame(){
   addLog('── '+t('gameStart')+' '+players.map(p=>p.name+(p.isAI?' 🤖':'')).join(', ')+' ──','sep');
   addLog(players[0].name+t('turnOf'));
   setCtrl(true,false,false);
+  fitBoard();
 }
 
 /* ── AI ENGINE ── */
@@ -2439,6 +2520,32 @@ function confirmRestart(){
   true);   // silent: no card sound, don't wake the AI
 }
 
+
+/* ── FIT THE BOARD TO THE VIEWPORT ──
+   The board's geometry is fixed in pixels (piece placement depends on it),
+   so we scale the scene rather than reflowing the grid. */
+const BOARD_PX=782;
+function fitBoard(){
+  const wrap=document.getElementById('board-wrap');
+  const scene=document.getElementById('scene');
+  if(!wrap||!scene) return;
+  // width the board may occupy: viewport minus body padding, capped at natural size
+  const vw=(window&&window.innerWidth)||1280;
+  const pad=(vw<=720)?16:32;
+  let avail=Math.min(vw-pad, 1080);
+  // side-by-side layout leaves room for the panel
+  if(vw>1040) avail=Math.min(avail-246, BOARD_PX);
+  const scale=Math.max(0.34, Math.min(1, avail/BOARD_PX));
+  scene.style.transform='scale('+scale+')';
+  // the scaled element still reserves its unscaled box, so size the wrapper
+  wrap.style.width=(BOARD_PX*scale)+'px';
+  wrap.style.height=(BOARD_PX*scale)+'px';
+}
+if(window&&window.addEventListener){
+  window.addEventListener('resize',fitBoard);
+  window.addEventListener('orientationchange',()=>setTimeout(fitBoard,150));
+}
+
 /* ── 3D TOGGLE ── */
 let is3d=false;
 let boardRot=0;                       // 0 / 90 / 180 / 270
@@ -2472,6 +2579,8 @@ function toggle3d(){
   const bc=document.getElementById('board-container');
   const btn=document.getElementById('view-toggle');
   bc.classList.toggle('view3d',is3d);
+  const bw=document.getElementById('board-wrap');
+  if(bw) bw.classList.toggle('is3d',is3d);
   btn.textContent=is3d?t('viewFlat'):t('view3d');
   // rotation only makes sense in 3D – show the controls with the view
   ['rot-left','rot-right'].forEach(id=>{
@@ -2487,6 +2596,7 @@ buildBoard();
 applyLang();
 updateRollLabel();
 applyBoardRotation();
+fitBoard();
 </script>
 </body>
 </html>
