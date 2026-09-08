@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Monopoly</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap');</style>
 <style>
@@ -349,6 +350,22 @@ button:disabled{opacity:.35;cursor:default}
   letter-spacing:.5px;min-height:13px;text-align:center;
 }
 
+/* online lobby */
+#room-code{font-family:'Georgia',serif;font-size:30px;font-weight:700;letter-spacing:8px;
+  color:#1b3a0a;background:#fffdf5;border:2px dashed #3a7a1a;border-radius:6px;
+  padding:8px 4px;margin:4px 0;user-select:all;cursor:text}
+#lobby-list,#lobby-list-c{display:flex;flex-direction:column;gap:5px}
+.lobby-row{display:flex;align-items:center;gap:7px;background:#fffdf5;border:1px solid #ddd6bc;
+  border-radius:5px;padding:5px 7px}
+.lobby-name{font-family:sans-serif;font-size:11px;font-weight:600;color:#333;text-align:left}
+.lobby-name em{color:#3a7a1a;font-size:10px;font-style:normal}
+#net-status{font-family:sans-serif;font-size:11px;color:#666;margin-top:8px;min-height:14px}
+#net-status.net-err{color:#b71c1c;font-weight:600}
+#name-label{display:block;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:#7a7a5a;margin-bottom:5px;text-align:left}
+#card-waiting{font-family:sans-serif;font-size:11px;color:#888;font-style:italic;margin-bottom:8px;min-height:14px}
+#join-code{letter-spacing:3px;font-weight:700;text-align:center}
+
 /* board theme picker */
 #theme-label{display:block;font-family:sans-serif;font-size:11px;font-weight:700;
   letter-spacing:.5px;text-transform:uppercase;color:#7a7a5a;margin-bottom:5px;text-align:left}
@@ -490,6 +507,7 @@ button:disabled{opacity:.35;cursor:default}
       <div id="card-text"></div>
       <div id="card-effect"></div>
       <table id="card-deed"></table>
+      <div id="card-waiting"></div>
       <div id="card-btns">
         <button id="card-close" onclick="closeCard()">OK</button>
         <button id="card-alt" onclick="closeCardAlt()" style="display:none">Pass</button>
@@ -537,7 +555,45 @@ button:disabled{opacity:.35;cursor:default}
         <button data-lang="de" onclick="setLang('de')">🇩🇪 DE</button>
         <button data-lang="nl" onclick="setLang('nl')">🇳🇱 NL</button>
       </div>
-      <div id="setup-step1">
+      <!-- step 0: local or online -->
+      <div id="setup-mode">
+        <p id="mode-sub" style="font-size:12px;color:#555;margin-bottom:12px">How do you want to play?</p>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <button class="primary" id="btn-local" onclick="chooseLocal()">🎲 Play on this device</button>
+          <button class="primary" id="btn-online" onclick="chooseOnline()">🌐 Play online with friends</button>
+        </div>
+      </div>
+
+      <!-- online: host or join -->
+      <div id="online-choice" style="display:none">
+        <label id="name-label" for="online-name">Your name</label>
+        <input id="online-name" class="psetup-input" style="width:100%;margin-bottom:12px" maxlength="14" placeholder="Player">
+        <button class="primary" id="btn-host" style="width:100%;margin-bottom:8px" onclick="hostRoom()">Create room</button>
+        <div style="display:flex;gap:6px">
+          <input id="join-code" class="psetup-input" style="flex:1;text-transform:uppercase" maxlength="5" placeholder="CODE">
+          <button id="btn-join" onclick="joinRoom()">Join</button>
+        </div>
+        <div id="net-status"></div>
+        <button id="btn-back-mode" style="width:100%;margin-top:10px" onclick="backToMode()">←</button>
+      </div>
+
+      <!-- host lobby -->
+      <div id="lobby-host" style="display:none">
+        <div id="room-label" style="font-size:11px;color:#7a7a5a;text-transform:uppercase;letter-spacing:.5px">Room code</div>
+        <div id="room-code">-----</div>
+        <div id="room-hint" style="font-size:10px;color:#999;margin-bottom:10px">Share this code with your friends</div>
+        <div id="lobby-count" style="font-size:11px;color:#666;margin-bottom:6px">1 / 6</div>
+        <div id="lobby-list"></div>
+        <button class="primary" id="btn-start-online" style="width:100%;margin-top:12px" onclick="hostStartOnline()">Start Game</button>
+      </div>
+
+      <!-- client lobby -->
+      <div id="lobby-client" style="display:none">
+        <div id="wait-msg" style="font-size:12px;color:#555;margin-bottom:10px">Connected. Waiting for the host to start…</div>
+        <div id="lobby-list-c"></div>
+      </div>
+
+      <div id="setup-step1" style="display:none">
         <label id="theme-label" for="theme-select">Board theme</label>
         <select id="theme-select" onchange="setTheme(this.value)">
           <option value="classic">🇺🇸 Classic (USA)</option>
@@ -578,6 +634,12 @@ button:disabled{opacity:.35;cursor:default}
 const LANGS={
   en:{_name:'English', _flag:'🇬🇧',
     title:'Monopoly', howMany:'How many players?',
+    playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
+    yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
+    shareCode:'Share this code with your friends', waitHost:'Connected. Waiting for the host to start…',
+    hostTag:'host', waitingFor:'Waiting for', netConnecting:'Connecting…', netError:'Connection error',
+    netBadCode:'Enter a valid room code', netHostLeft:'Host disconnected', netNoLib:'Network library failed to load',
+    roomFull:'Room is full', startGameOnline:'Start Game',
     boardTheme:'Board theme',
     rotLeft:'Rotate board left 90°', rotRight:'Rotate board right 90°',
     setupFirst:'Choose players to begin',
@@ -620,6 +682,12 @@ const LANGS={
   },
   th:{_name:'ไทย', _flag:'🇹🇭',
     title:'เกมเศรษฐี', howMany:'มีผู้เล่นกี่คน?',
+    playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
+    yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
+    shareCode:'ส่งรหัสนี้ให้เพื่อนของคุณ', waitHost:'เชื่อมต่อแล้ว รอเจ้าของห้องเริ่มเกม…',
+    hostTag:'เจ้าของห้อง', waitingFor:'กำลังรอ', netConnecting:'กำลังเชื่อมต่อ…', netError:'เชื่อมต่อผิดพลาด',
+    netBadCode:'กรุณาใส่รหัสห้องให้ถูกต้อง', netHostLeft:'เจ้าของห้องออกจากเกม', netNoLib:'โหลดไลบรารีเครือข่ายไม่สำเร็จ',
+    roomFull:'ห้องเต็มแล้ว', startGameOnline:'เริ่มเกม',
     boardTheme:'ธีมกระดาน',
     rotLeft:'หมุนกระดานซ้าย 90°', rotRight:'หมุนกระดานขวา 90°',
     setupFirst:'เลือกผู้เล่นเพื่อเริ่มเกม',
@@ -662,6 +730,12 @@ const LANGS={
   },
   de:{_name:'Deutsch', _flag:'🇩🇪',
     title:'Monopoly', howMany:'Wie viele Spieler?',
+    playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
+    yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
+    shareCode:'Teile diesen Code mit deinen Freunden', waitHost:'Verbunden. Warten auf den Host…',
+    hostTag:'Host', waitingFor:'Warte auf', netConnecting:'Verbinde…', netError:'Verbindungsfehler',
+    netBadCode:'Gültigen Raumcode eingeben', netHostLeft:'Host hat die Verbindung getrennt', netNoLib:'Netzwerkbibliothek nicht geladen',
+    roomFull:'Raum ist voll', startGameOnline:'Spiel starten',
     boardTheme:'Spielbrett-Thema',
     rotLeft:'Brett 90° nach links drehen', rotRight:'Brett 90° nach rechts drehen',
     setupFirst:'Wähle Spieler zum Starten',
@@ -704,6 +778,12 @@ const LANGS={
   },
   nl:{_name:'Nederlands', _flag:'🇳🇱',
     title:'Monopoly', howMany:'Hoeveel spelers?',
+    playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
+    yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
+    shareCode:'Deel deze code met je vrienden', waitHost:'Verbonden. Wachten tot de host start…',
+    hostTag:'host', waitingFor:'Wachten op', netConnecting:'Verbinden…', netError:'Verbindingsfout',
+    netBadCode:'Voer een geldige kamercode in', netHostLeft:'Host heeft verbinding verbroken', netNoLib:'Netwerkbibliotheek niet geladen',
+    roomFull:'Kamer is vol', startGameOnline:'Spel starten',
     boardTheme:'Bordthema',
     rotLeft:'Bord 90° naar links draaien', rotRight:'Bord 90° naar rechts draaien',
     setupFirst:'Kies spelers om te beginnen',
@@ -801,6 +881,16 @@ function applyLang(){
   set('restart-btn',t('restart'));
   set('setup-sub',t('howMany'));
   set('theme-label',t('boardTheme'));
+  set('mode-sub',t('playMode'));
+  set('btn-local',t('playLocal'));
+  set('btn-online',t('playOnline'));
+  set('name-label',t('yourName'));
+  set('btn-host',t('createRoom'));
+  set('btn-join',t('joinBtn'));
+  set('room-label',t('roomCode'));
+  set('room-hint',t('shareCode'));
+  set('wait-msg',t('waitHost'));
+  set('btn-start-online',t('startGameOnline'));
   set('setup-sub2',t('whoPlays'));
   set('btn-start',t('startGame'));
   if(setupCount) renderPlayerSetup();
@@ -967,6 +1057,283 @@ function makeCell(idx,sq,side){
   return d;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ONLINE MULTIPLAYER  (PeerJS, host-authoritative)
+
+   The host's browser runs every rule. Clients are thin renderers:
+   they send intents ("I clicked roll") and draw whatever the host
+   sends back. That keeps one copy of the rules, so the game can
+   never disagree with itself.
+   ══════════════════════════════════════════════════════════════ */
+const NET={
+  mode:'local',        // 'local' | 'host' | 'client'
+  peer:null,
+  conns:[],            // host: one per client
+  hostConn:null,       // client: link back to host
+  seat:-1,             // which player index this browser controls
+  roomId:null,
+  lobby:[],            // host: [{seat,name,conn}]
+  myName:'',
+  transport:null,      // test hook – lets the suite swap PeerJS out
+
+  isHost(){ return this.mode==='host'; },
+  isClient(){ return this.mode==='client'; },
+  isOnline(){ return this.mode!=='local'; },
+
+  /* this browser may act only on the seat it owns */
+  controlsSeat(i){
+    if(this.mode==='local') return true;
+    return i===this.seat;
+  },
+  myTurn(){ return this.controlsSeat(current); },
+
+  send(msg){                                   // client → host
+    if(this.transport) return this.transport.toHost(msg);
+    if(this.hostConn&&this.hostConn.open) this.hostConn.send(msg);
+  },
+  broadcast(msg){                              // host → all clients
+    if(this.transport) return this.transport.toClients(msg);
+    this.conns.forEach(c=>{ if(c.open) c.send(msg); });
+  },
+};
+
+/* ── STATE SNAPSHOT ───────────────────────────────────────────
+   Everything a client needs to draw the game. Deliberately small:
+   the board layout is identical on every machine, so only the
+   mutable parts travel. */
+function snapshot(){
+  return {
+    theme:THEME,
+    players:players.map(p=>({
+      name:p.name, color:p.color, initial:p.initial, isAI:p.isAI,
+      pos:p.pos, money:p.money, jail:p.jail, jailT:p.jailT,
+      bankrupt:p.bankrupt, props:p.props.slice()
+    })),
+    current, rolled, moving, turnEnding, doublesCount, lastWasDoubles
+  };
+}
+
+function applySnapshot(s){
+  if(s.theme&&s.theme!==THEME) applyTheme(s.theme);
+  const fresh=(players.length!==s.players.length);
+  s.players.forEach((sp,i)=>{
+    let p=players[i];
+    if(!p){ p=players[i]={el:null}; }
+    Object.assign(p,{
+      name:sp.name,color:sp.color,initial:sp.initial,isAI:sp.isAI,
+      pos:sp.pos,money:sp.money,jail:sp.jail,jailT:sp.jailT,
+      bankrupt:sp.bankrupt,props:sp.props.slice()
+    });
+  });
+  players.length=s.players.length;
+  current=s.current; rolled=s.rolled; moving=s.moving;
+  turnEnding=s.turnEnding; doublesCount=s.doublesCount; lastWasDoubles=s.lastWasDoubles;
+  if(fresh) spawnPieces();
+  players.forEach((p,i)=>{ if(p.el) placePiece(p,p.pos,i); });
+  renderPlayers();
+  updateRollLabel();
+}
+
+/* ── HOST: broadcast helpers ────────────────────────────────── */
+function netSync(){ if(NET.isHost()) NET.broadcast({t:'sync',s:snapshot()}); }
+
+/* ── MESSAGE HANDLERS ───────────────────────────────────────── */
+function hostHandle(msg,conn){
+  if(msg.t==='join'){
+    const seat=NET.lobby.length+1;              // host is seat 0
+    if(seat>5){ if(conn&&conn.send) conn.send({t:'full'}); return; }
+    NET.lobby.push({seat,name:msg.name||('Player '+(seat+1)),conn});
+    if(conn&&conn.send) conn.send({t:'seat',seat,name:msg.name});
+    NET.broadcast({t:'lobby',list:NET.lobby.map(l=>({seat:l.seat,name:l.name}))});
+    renderLobby();
+    return;
+  }
+  if(msg.t==='intent'){
+    // only the player whose turn it is may act
+    if(msg.seat!==current && msg.a!=='chat') return;
+    if(msg.a==='roll')       rollDice(true);
+    else if(msg.a==='ok')    closeCard(true);
+    else if(msg.a==='alt')   closeCardAlt(true);
+    else if(msg.a==='sell')  sellProperty(msg.seat,msg.idx,true);
+    return;
+  }
+}
+
+function clientHandle(msg){
+  switch(msg.t){
+    case 'seat':   NET.seat=msg.seat; renderLobby(); break;
+    case 'lobby':  NET.lobby=msg.list; renderLobby(); break;
+    case 'start':  netStartGame(msg); break;
+    case 'sync':   applySnapshot(msg.s); break;
+    case 'log':    addLog(msg.m,msg.c); break;
+    case 'toast':  toast(msg.m); break;
+    case 'dice':   showDice(msg.d1,msg.d2); break;
+    case 'move':   netAnimate(msg.i,msg.from,msg.to); break;
+    case 'popup':  netShowPopup(msg); break;
+    case 'close':  netClosePopup(); break;
+    case 'winner': showWinner(players[msg.i]); break;
+    case 'full':   alert(t('roomFull')); break;
+  }
+}
+
+/* ── PEERJS CONNECTION ──────────────────────────────────────── */
+function makeRoomCode(){
+  const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no confusable chars
+  let s=''; for(let i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)];
+  return s;
+}
+
+function hostRoom(){
+  if(typeof Peer==='undefined'){ netStatus(t('netNoLib'),'err'); return; }
+  NET.mode='host'; NET.seat=0;
+  NET.myName=(document.getElementById('online-name')||{}).value||'';
+  const code=makeRoomCode();
+  NET.roomId=code;
+  netStatus(t('netConnecting'));
+  NET.peer=new Peer('mply-'+code,{debug:0});
+  NET.peer.on('open',()=>{
+    document.getElementById('room-code').textContent=code;
+    document.getElementById('lobby-host').style.display='block';
+    document.getElementById('online-choice').style.display='none';
+    netStatus('');
+    renderLobby();
+  });
+  NET.peer.on('connection',conn=>{
+    NET.conns.push(conn);
+    conn.on('data',m=>hostHandle(m,conn));
+    conn.on('close',()=>{
+      NET.conns=NET.conns.filter(c=>c!==conn);
+      NET.lobby=NET.lobby.filter(l=>l.conn!==conn);
+      renderLobby();
+    });
+  });
+  NET.peer.on('error',e=>netStatus(t('netError')+': '+e.type,'err'));
+}
+
+function joinRoom(){
+  if(typeof Peer==='undefined'){ netStatus(t('netNoLib'),'err'); return; }
+  const code=(document.getElementById('join-code').value||'').trim().toUpperCase();
+  if(code.length<4){ netStatus(t('netBadCode'),'err'); return; }
+  NET.mode='client';
+  NET.myName=(document.getElementById('online-name')||{}).value||'';
+  netStatus(t('netConnecting'));
+  NET.peer=new Peer({debug:0});
+  NET.peer.on('open',()=>{
+    const conn=NET.peer.connect('mply-'+code,{reliable:true});
+    NET.hostConn=conn;
+    conn.on('open',()=>{
+      conn.send({t:'join',name:NET.myName});
+      document.getElementById('lobby-client').style.display='block';
+      document.getElementById('online-choice').style.display='none';
+      netStatus('');
+    });
+    conn.on('data',clientHandle);
+    conn.on('close',()=>netStatus(t('netHostLeft'),'err'));
+  });
+  NET.peer.on('error',e=>netStatus(t('netError')+': '+e.type,'err'));
+}
+
+function netStatus(msg,cls){
+  const el=document.getElementById('net-status');
+  if(!el) return;
+  el.textContent=msg||'';
+  el.className=cls==='err'?'net-err':'';
+}
+
+/* ── LOBBY ──────────────────────────────────────────────────── */
+function renderLobby(){
+  const list=document.getElementById('lobby-list');
+  if(!list) return;
+  const seats=[];
+  seats.push({seat:0,name:NET.isHost()?(NET.myName||DEFAULT_NAMES[0]):(NET.lobby.hostName||DEFAULT_NAMES[0]),host:true});
+  NET.lobby.forEach(l=>seats.push({seat:l.seat,name:l.name}));
+  list.innerHTML=seats.map(s=>
+    `<div class="lobby-row">
+       <span class="psetup-token" style="background:${PCOLORS[s.seat]}">${PAVATAR[s.seat]}</span>
+       <span class="lobby-name">${s.name}${s.host?' <em>('+t('hostTag')+')</em>':''}${s.seat===NET.seat?' ◀':''}</span>
+     </div>`).join('');
+  const cnt=document.getElementById('lobby-count');
+  if(cnt) cnt.textContent=seats.length+' / 6';
+}
+
+/* host presses Start: fill empty seats with AI and launch everywhere */
+function hostStartOnline(){
+  const humanSeats=1+NET.lobby.length;
+  const total=Math.max(2,humanSeats);
+  setupCount=total;
+  setupNames=[]; setupTypes=[];
+  for(let i=0;i<total;i++){
+    const l=(i===0)?{name:NET.myName}:NET.lobby.find(x=>x.seat===i);
+    setupNames[i]=l?l.name:'';
+    setupTypes[i]=l?'human':'ai';
+  }
+  NET.broadcast({t:'start',names:setupNames,types:setupTypes,count:total,theme:THEME});
+  closeSetup();
+  beginGame();
+  netSync();
+}
+
+/* client receives the host's start signal */
+function netStartGame(msg){
+  setupCount=msg.count; setupNames=msg.names; setupTypes=msg.types;
+  if(msg.theme) applyTheme(msg.theme);
+  closeSetup();
+  beginGame();
+}
+
+function closeSetup(){
+  const s=document.getElementById('setup');
+  if(s) s.remove();
+  const pi=document.getElementById('players-info'); if(pi) pi.style.display='flex';
+  const lg=document.getElementById('log');          if(lg) lg.style.display='flex';
+}
+
+/* ── CLIENT-SIDE RENDER HELPERS ─────────────────────────────── */
+function showDice(d1,d2){
+  [d1,d2].forEach((val,idx)=>{
+    const el=document.getElementById('d'+(idx+1));
+    if(!el) return;
+    el.style.setProperty('--rx','1080deg'); el.style.setProperty('--ry','1080deg');
+    el.classList.remove('rolling','settled'); el.style.transform='';
+    void el.offsetWidth; el.classList.add('rolling');
+    setTimeout(()=>{
+      el.classList.remove('rolling');
+      el.style.transform='rotateX(0deg) rotateY(0deg)';
+      const f=el.querySelector('.die-face.f1');
+      if(f) f.innerHTML=PIP_HTML[val];
+      el.classList.add('settled');
+    },900);
+  });
+  if(typeof SFX!=='undefined') SFX.dice();
+}
+
+function netAnimate(i,from,to){
+  const p=players[i];
+  if(!p||!p.el) return;
+  animatePiece(p,from,to,()=>{ renderPlayers(); });
+}
+
+/* a popup pushed from the host; only the acting seat gets live buttons */
+function netShowPopup(msg){
+  const mine=NET.controlsSeat(msg.seat);
+  showEvent(msg.opts,
+    mine?()=>NET.send({t:'intent',a:'ok',seat:NET.seat}):null,
+    mine&&msg.hasAlt?()=>NET.send({t:'intent',a:'alt',seat:NET.seat}):null,
+    true);
+  // spectators see the card but can't act on it
+  const ok=document.getElementById('card-close'), alt=document.getElementById('card-alt');
+  if(ok)  ok.disabled=!mine;
+  if(alt) alt.disabled=!mine;
+  const wait=document.getElementById('card-waiting');
+  if(wait) wait.textContent=mine?'':t('waitingFor')+' '+(players[msg.seat]?players[msg.seat].name:'');
+}
+
+function netClosePopup(){
+  const o=document.getElementById('card-overlay');
+  if(o) o.style.display='none';
+  lastEvent=null; cardResolve=null; cardAltResolve=null;
+}
+
 /* utility icon by board position, not by name (names change with the theme) */
 function utilIco(idx){ return idx===12?'⚡':'💧'; }
 
@@ -1046,6 +1413,24 @@ let players=[],current=0,rolled=false,canBuy=false,landedIdx=null,moving=false;
 let setupCount=0, setupTypes=[], setupNames=[];   // setupTypes[i] = 'human' | 'ai'
 
 /* ── SETUP: step 1 → step 2 ── */
+function chooseLocal(){
+  NET.mode='local';
+  document.getElementById('setup-mode').style.display='none';
+  document.getElementById('setup-step1').style.display='block';
+  if(typeof SFX!=='undefined') SFX.click();
+}
+function chooseOnline(){
+  document.getElementById('setup-mode').style.display='none';
+  document.getElementById('online-choice').style.display='block';
+  if(typeof SFX!=='undefined') SFX.click();
+}
+function backToMode(){
+  document.getElementById('online-choice').style.display='none';
+  document.getElementById('setup-mode').style.display='block';
+  NET.mode='local';
+  if(typeof SFX!=='undefined') SFX.click();
+}
+
 function chooseCount(n){
   setupCount=n;
   // default: player 1 human, everyone else computer
@@ -1114,7 +1499,10 @@ let aiTimer=null;
 const AI_DELAY=900;          // pause so humans can follow along
 const AI_RESERVE=120;        // keep this much cash on hand when buying
 
-function isAITurn(){ const p=players[current]; return !!(p&&p.isAI&&!p.bankrupt); }
+function isAITurn(){
+  if(NET.isClient()) return false;            // only the host drives AI seats
+  const p=players[current]; return !!(p&&p.isAI&&!p.bankrupt);
+}
 function popupOpen(){ const o=document.getElementById('card-overlay'); return o&&o.style.display==='flex'; }
 function portfolioOpen(){ const o=document.getElementById('portfolio-overlay'); return o&&o.style.display==='flex'; }
 
@@ -1222,6 +1610,7 @@ function animatePiece(p,fromSq,toSq,done){
 
 /* ── RENDER ── */
 function renderPlayers(){
+  if(NET.isHost()) netSync();
   const el=document.getElementById('players-info');
   el.innerHTML='';
   players.forEach((p,i)=>{
@@ -1245,6 +1634,7 @@ function renderPlayers(){
 }
 
 function addLog(msg,cls=''){
+  if(NET.isHost()) NET.broadcast({t:'log',m:msg,c:cls});
   const l=document.getElementById('log');
   const d=document.createElement('div');d.className='msg'+(cls?' '+cls:'');d.textContent=msg;
   l.appendChild(d);l.scrollTop=l.scrollHeight;
@@ -1265,7 +1655,8 @@ function updateRollLabel(){
   const p=players[current];
   const again=(doublesCount>0);
   if(b) b.textContent=(p?p.initial+' ':'🎲 ')+(again?t('rollAgain'):t('rollShort'));
-  const canRoll=!!(b&&!b.disabled);
+  let canRoll=!!(b&&!b.disabled);
+  if(NET.isOnline()&&!NET.myTurn()) canRoll=false;
   if(area){
     area.classList.toggle('disabled',!canRoll);
     area.classList.toggle('ready',canRoll);
@@ -1283,13 +1674,18 @@ function setCtrl(roll,buy,end){
   if(typeof aiTick==='function') aiTick();
 }
 function toast(msg){
+  if(NET.isHost()) NET.broadcast({t:'toast',m:msg});
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
 /* ── SELL ── */
 // sell price = half of purchase price (standard Monopoly rule)
-function sellProperty(playerIdx, sqIdx){
+function sellProperty(playerIdx, sqIdx, relayed){
+  if(NET.isClient()){
+    if(NET.controlsSeat(playerIdx)) NET.send({t:'intent',a:'sell',seat:NET.seat,idx:sqIdx});
+    return;
+  }
   const p=players[playerIdx], sq=SQ[sqIdx];
   const salePrice=Math.floor(sq.p/2);
   p.props=p.props.filter(i=>i!==sqIdx);
@@ -1453,8 +1849,15 @@ const PIP_HTML={
   6:'<i class="pip p-tl"></i><i class="pip p-tr"></i><i class="pip p-ml"></i><i class="pip p-mr"></i><i class="pip p-bl"></i><i class="pip p-br"></i>',
 };
 
-function rollDice(){
+function rollDice(relayed){
   if(!players.length)return;            // game hasn't started yet
+  if(NET.isClient()){                   // clients never run rules – ask the host
+    if(NET.myTurn()) NET.send({t:'intent',a:'roll',seat:NET.seat});
+    return;
+  }
+  // the host may act for its own seat, for AI seats, or when relaying a
+  // client's intent – but not for a remote human on a local click
+  if(!relayed && NET.isOnline() && !NET.controlsSeat(current) && !players[current].isAI) return;
   if(rolled||moving||turnEnding)return;
   const rb=document.getElementById('btn-roll');
   if(rb&&rb.disabled)return;            // dice area is clickable too – honour the same gate
@@ -1484,6 +1887,7 @@ function rollDice(){
   });
 
   SFX.dice();
+  if(NET.isHost()) NET.broadcast({t:'dice',d1,d2});
   addLog(`${p.name} ${t('rolledW')} ${d1}+${d2} = ${total}`);
   rolled=true;moving=true;setCtrl(false,false,false);
 
@@ -1512,6 +1916,7 @@ function rollDice(){
     } else doublesCount=0;
 
     const from=p.pos,to=(p.pos+total)%40;
+    if(NET.isHost()) NET.broadcast({t:'move',i:players.indexOf(p),from,to});
     animatePiece(p,from,to,()=>{
       moving=false;
       if(to<from){p.money+=200;SFX.go();addLog(p.name+' '+t('passedGo'),'imp');toast('🎉 '+t('passedGo'));}
@@ -1729,6 +2134,8 @@ function showEvent(opts, onOk, onAlt, silent){
   else alt.style.display='none';
 
   document.getElementById('card-overlay').style.display='flex';
+  if(NET.isHost()&&!silent)
+    NET.broadcast({t:'popup',opts,hasAlt:!!opts.btn2,seat:current});
   if(!silent){ if(opts.kind==='jail')SFX.jail(); else SFX.card(); }
   setCtrl(false,false,false);
   cardResolve=onOk||null;
@@ -1736,14 +2143,18 @@ function showEvent(opts, onOk, onAlt, silent){
   if(!silent && typeof aiTick==='function') aiTick();
 }
 
-function closeCard(){
+function closeCard(relayed){
+  if(NET.isClient()){ if(NET.myTurn()) NET.send({t:'intent',a:'ok',seat:NET.seat}); return; }
+  if(NET.isHost()) NET.broadcast({t:'close'});
   lastEvent=null;
   document.getElementById('card-overlay').style.display='none';
   const r=cardResolve;cardResolve=null;cardAltResolve=null;
   if(typeof r==='function') r();
 }
 
-function closeCardAlt(){
+function closeCardAlt(relayed){
+  if(NET.isClient()){ if(NET.myTurn()) NET.send({t:'intent',a:'alt',seat:NET.seat}); return; }
+  if(NET.isHost()) NET.broadcast({t:'close'});
   lastEvent=null;
   document.getElementById('card-overlay').style.display='none';
   const r=cardAltResolve;cardResolve=null;cardAltResolve=null;
@@ -1925,6 +2336,7 @@ function declareBankrupt(p){
 }
 
 function showWinner(w){
+  if(NET.isHost()) NET.broadcast({t:'winner',i:players.indexOf(w)});
   turnEnding=false;
   if(typeof aiTimer!=='undefined') clearTimeout(aiTimer);
   SFX.win();
