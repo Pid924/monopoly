@@ -597,7 +597,7 @@ button:disabled{opacity:.35;cursor:default}
 
 <!-- top toolbar -->
 <div id="topbar">
-  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.3</span>
+  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.4</span>
   <div class="tb-group">
     <button id="rot-left"  class="rot-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
     <button id="rot-right" class="rot-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
@@ -741,7 +741,7 @@ const LANGS={
     cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
     leaveText:'Leave this online game? The computer will take over your player.',
     leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
-    aiTookOver:'🤖 Computer is now playing', version:'v1.3',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.4',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -794,7 +794,7 @@ const LANGS={
     cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
     leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
     leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
-    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.3',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.4',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -847,7 +847,7 @@ const LANGS={
     cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
     leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
     leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
-    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.3',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.4',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -900,7 +900,7 @@ const LANGS={
     cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
     leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
     leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
-    aiTookOver:'🤖 De computer speelt nu', version:'v1.3',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.4',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
@@ -1418,7 +1418,12 @@ function hostPlayerLeft(seat,name){
   renderLobby();
   renderPlayers();
   netSync();
-  if(typeof aiTick==='function') aiTick();     // the bot picks up immediately
+  updateRollLabel();
+  // If they walked out mid-turn, the bot has to pick the turn up right now.
+  if(seat===current){
+    setCtrl(false,false,false);
+    setTimeout(()=>{ if(typeof aiTick==='function') aiTick(); }, 400);
+  } else if(typeof aiTick==='function') aiTick();
 }
 
 /* ── PEERJS CONNECTION ──────────────────────────────────────── */
@@ -1987,10 +1992,16 @@ function aiTick(){
   }
   if(portfolioOpen()){ closePortfolio(); }
 
-  // 3. normal turn: roll, then end
-  const rollBtn=document.getElementById('btn-roll');
-  if(rollBtn&&!rollBtn.disabled){ aiSchedule(()=>rollDice()); return; }
-  // turns now advance on their own – nothing else for the AI to click
+  // 3. normal turn: roll. Gate on game state, never on the button — online the
+  //    button is disabled for any seat the host doesn't personally own, and a
+  //    bot that took over a departed player still has to move.
+  if(!rolled && !moving && !turnEnding){
+    aiSchedule(()=>{
+      if(isAITurn() && !rolled && !moving && !turnEnding) rollDice(true);
+    });
+    return;
+  }
+  // turns end on their own – nothing else for the AI to click
 }
 
 function spawnPieces(){
