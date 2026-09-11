@@ -311,17 +311,32 @@ button:disabled{opacity:.35;cursor:default}
   #ui{flex-direction:column;align-items:center}
   #panel{width:100%;max-width:782px;min-height:0}
   #log{flex:0 0 auto;height:160px}
-  #tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;letter-spacing:0;align-self:center;margin-right:auto;opacity:.85}
-.tb-brand{font-size:15px;letter-spacing:2px}
+  .tb-brand{font-size:15px;letter-spacing:2px}
+  .tb-controls{gap:6px 8px}
+}
+
+/* tablet: title gets its own line, controls centre beneath it */
+@media (max-width:860px){
+  #topbar{gap:8px;padding:8px 10px;justify-content:center}
+  .tb-title{width:100%;justify-content:center;margin-right:0}
+  .tb-controls{width:100%;justify-content:center}
 }
 
 @media (max-width:720px){
   body{padding:8px 8px 14px;gap:8px}
-  #topbar{gap:6px;padding:7px 8px;justify-content:center}
-  #tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;letter-spacing:0;align-self:center;margin-right:auto;opacity:.85}
-.tb-brand{width:100%;text-align:center;margin-right:0;font-size:14px;letter-spacing:2px}
-  .tb-group{flex:1;justify-content:center}
-  .tb-group button{padding:6px 8px;font-size:10px}
+  #topbar{gap:7px;padding:7px 8px}
+  .tb-brand{font-size:14px;letter-spacing:2px}
+  #tb-version{font-size:9px}
+  /* keep every control on ONE line and let it scroll, rather than stacking
+     into three ragged rows that eat the screen */
+  .tb-controls{
+    flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
+    gap:6px;padding-bottom:2px;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .tb-controls::-webkit-scrollbar{display:none}
+  .tb-group{flex:0 0 auto}
+  .tb-group button{padding:6px 9px;font-size:10px}
   #lang-bar-game button{padding:6px 7px;font-size:10px}
   #log{height:140px;font-size:10px}
   .pcard{font-size:11px;padding:7px 9px}
@@ -350,8 +365,12 @@ button:disabled{opacity:.35;cursor:default}
 }
 
 @media (max-width:420px){
-  #topbar{padding:6px}
-  .tb-group button{padding:5px 6px;font-size:9px}
+  #topbar{padding:6px 7px;gap:5px}
+  .tb-brand{font-size:12.5px;letter-spacing:1.5px}
+  #tb-version{font-size:8.5px}
+  .tb-group button{padding:6px 7px;font-size:9px;letter-spacing:.3px}
+  #lang-bar-game button{padding:6px 6px;font-size:9px}
+  .rot-btn{padding:5px 8px;font-size:13px}
   #log{height:120px}
   #toast{font-size:12px;padding:8px 14px;max-width:92vw;white-space:normal;text-align:center}
 }
@@ -368,18 +387,22 @@ button:disabled{opacity:.35;cursor:default}
 
 /* ── TOP TOOLBAR ── */
 #topbar{
-  width:100%;max-width:1080px;display:flex;align-items:center;gap:12px;
-  padding:8px 12px;margin-bottom:4px;
+  width:100%;max-width:1080px;display:flex;align-items:center;
+  gap:10px 16px;padding:8px 12px;margin-bottom:4px;
   background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);
   border-radius:8px;flex-wrap:wrap;
 }
-#tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;letter-spacing:0;align-self:center;margin-right:auto;opacity:.85}
+.tb-title{display:flex;align-items:baseline;gap:6px;margin-right:auto;min-width:0}
+#tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;
+  letter-spacing:0;opacity:.85;white-space:nowrap}
 .tb-brand{
   font-family:'Georgia',serif;font-style:italic;font-weight:700;
   font-size:17px;letter-spacing:3px;color:#d4f0a0;text-transform:uppercase;
-  white-space:nowrap;margin-right:6px;
+  white-space:nowrap;
 }
-.tb-group{display:flex;gap:5px;flex-wrap:wrap}
+/* one row that holds every control, so wrapping is predictable */
+.tb-controls{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;justify-content:flex-end}
+.tb-group{display:flex;gap:5px;flex-wrap:nowrap}
 .tb-group button{
   font-size:11px;padding:5px 10px;border-radius:5px;
   border:1.5px solid rgba(212,240,160,.45);
@@ -597,7 +620,10 @@ button:disabled{opacity:.35;cursor:default}
 
 <!-- top toolbar -->
 <div id="topbar">
-  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.4</span>
+  <div class="tb-title">
+    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.4</span>
+  </div>
+  <div class="tb-controls">
   <div class="tb-group">
     <button id="rot-left"  class="rot-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
     <button id="rot-right" class="rot-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
@@ -612,6 +638,7 @@ button:disabled{opacity:.35;cursor:default}
   </div>
   <div class="tb-group">
     <button id="restart-btn" onclick="toolbarAction()">↻ Restart</button>
+  </div>
   </div>
 </div>
 
