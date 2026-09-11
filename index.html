@@ -6,10 +6,10 @@
 <title>Monopoly</title>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap');</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap');</style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP',serif;background:#2d5016;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px 16px 16px;gap:10px}
+body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP','Noto Sans KR',serif;background:#2d5016;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px 16px 16px;gap:10px}
 
 /* ── BOARD ── */
 #board-container{position:relative;width:782px;height:782px;flex-shrink:0}
@@ -17,7 +17,7 @@ body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP',serif;
 
 /* cells */
 .cell{border:1px solid #1b3a0a;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.cell .cname{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP',serif;font-size:8px;text-align:center;line-height:1.25;color:#111;padding:0 3px;word-break:break-word}
+.cell .cname{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP','Noto Sans KR',serif;font-size:8px;text-align:center;line-height:1.25;color:#111;padding:0 3px;word-break:break-word}
 .cell .cprice{font-size:7.5px;color:#333;font-family:monospace;margin-top:1px}
 .cell .cicon{font-size:19px;line-height:1;margin-bottom:1px}
 /* CJK names are denser than Latin – ease the line height so they fit */
@@ -597,7 +597,7 @@ button:disabled{opacity:.35;cursor:default}
 
 <!-- top toolbar -->
 <div id="topbar">
-  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.1</span>
+  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.2</span>
   <div class="tb-group">
     <button id="rot-left"  class="rot-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
     <button id="rot-right" class="rot-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
@@ -667,6 +667,10 @@ button:disabled{opacity:.35;cursor:default}
           <option value="france">🇫🇷 France</option>
           <option value="italy">🇮🇹 Italia</option>
           <option value="spain">🇪🇸 España</option>
+          <option value="uk">🇬🇧 United Kingdom</option>
+          <option value="australia">🇦🇺 Australia</option>
+          <option value="korea">🇰🇷 대한민국 Korea</option>
+          <option value="canada">🇨🇦 Canada</option>
         </select>
         <div id="room-label" style="font-size:11px;color:#7a7a5a;text-transform:uppercase;letter-spacing:.5px">Room code</div>
         <div id="room-code">-----</div>
@@ -696,6 +700,10 @@ button:disabled{opacity:.35;cursor:default}
           <option value="france">🇫🇷 France</option>
           <option value="italy">🇮🇹 Italia</option>
           <option value="spain">🇪🇸 España</option>
+          <option value="uk">🇬🇧 United Kingdom</option>
+          <option value="australia">🇦🇺 Australia</option>
+          <option value="korea">🇰🇷 대한민국 Korea</option>
+          <option value="canada">🇨🇦 Canada</option>
         </select>
         <p id="setup-sub" style="font-size:12px;color:#555;margin:14px 0">How many players?</p>
         <div class="btns">
@@ -733,7 +741,7 @@ const LANGS={
     cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
     leaveText:'Leave this online game? The computer will take over your player.',
     leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
-    aiTookOver:'🤖 Computer is now playing', version:'v1.1',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.2',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -786,7 +794,7 @@ const LANGS={
     cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
     leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
     leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
-    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.1',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.2',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -839,7 +847,7 @@ const LANGS={
     cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
     leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
     leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
-    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.1',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.2',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -892,7 +900,7 @@ const LANGS={
     cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
     leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
     leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
-    aiTookOver:'🤖 De computer speelt nu', version:'v1.1',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.2',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
@@ -1665,6 +1673,42 @@ const THEMES={
            'Paseo del Prado','Paseo de la Castellana'],
     rails:['Estación Atocha','Estación Chamartín','Estación Sants','Estación Norte'],
     utils:['Compañía Eléctrica','Compañía de Aguas'] },
+
+  uk:{ label:'🇬🇧 United Kingdom',
+    props:['Old Kent Road','Whitechapel Road','The Angel Islington','Euston Road','Pentonville Road',
+           'Pall Mall','Whitehall','Northumberland Avenue','Bow Street','Marlborough Street',
+           'Vine Street','Strand','Fleet Street','Trafalgar Square','Leicester Square',
+           'Coventry Street','Piccadilly','Regent Street','Oxford Street','Bond Street',
+           'Park Lane','Mayfair'],
+    rails:['King\'s Cross Station','Marylebone Station','Fenchurch St. Station','Liverpool St. Station'],
+    utils:['Electric Company','Water Works'] },
+
+  australia:{ label:'🇦🇺 Australia',
+    props:['Elizabeth Street','Rundle Mall','Hindley Street','Murray Street','Hay Street',
+           'Queen Street Mall','Adelaide Street','Edward Street','Salamanca Place','Davey Street',
+           'Northbourne Avenue','Lygon Street','Chapel Street','Bourke Street','Collins Street',
+           'Flinders Street','Swanston Street','Oxford Street','Pitt Street','George Street',
+           'Circular Quay','Bondi Beach'],
+    rails:['Sydney Central','Southern Cross','Brisbane Central','Perth Station'],
+    utils:['Electricity Board','Water Supply'] },
+
+  korea:{ label:'🇰🇷 대한민국',
+    props:['서문시장','자갈치시장','동성로','해운대','남포동',
+           '전주 한옥마을','대전 은행동','광주 충장로','인천 차이나타운','수원 행궁동',
+           '홍대입구','이태원','신촌','종로','명동',
+           '을지로','여의도','성수동','압구정','청담동',
+           '삼성동','강남대로'],
+    rails:['서울역','부산역','대전역','광주송정역'],
+    utils:['한국전력','수도사업소'] },
+
+  canada:{ label:'🇨🇦 Canada',
+    props:['Water Street','Spring Garden Road','Rue Saint-Jean','Portage Avenue','Jasper Avenue',
+           'Whyte Avenue','Osborne Village','Broadway','Rue Sainte-Catherine','Rue Saint-Denis',
+           'Sparks Street','Byward Market','Queen Street West','Granville Street','Robson Street',
+           'Stephen Avenue','17th Avenue','Yonge Street','Bloor Street','Bay Street',
+           'Rue Sherbrooke','Distillery District'],
+    rails:['Union Station','Gare Centrale','Pacific Central','Winnipeg Union'],
+    utils:['Hydro Company','Waterworks'] },
 };
 
 let THEME='classic';
