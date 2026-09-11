@@ -595,7 +595,7 @@ button:disabled{opacity:.35;cursor:default}
 
 <!-- top toolbar -->
 <div id="topbar">
-  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.0</span>
+  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.1</span>
   <div class="tb-group">
     <button id="rot-left"  class="rot-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
     <button id="rot-right" class="rot-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
@@ -721,7 +721,7 @@ const LANGS={
     cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
     leaveText:'Leave this online game? The computer will take over your player.',
     leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
-    aiTookOver:'🤖 Computer is now playing', version:'v1.0',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.1',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -774,7 +774,7 @@ const LANGS={
     cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
     leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
     leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
-    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.0',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.1',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -827,7 +827,7 @@ const LANGS={
     cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
     leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
     leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
-    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.0',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.1',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -880,7 +880,7 @@ const LANGS={
     cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
     leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
     leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
-    aiTookOver:'🤖 De computer speelt nu', version:'v1.0',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.1',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
@@ -1360,7 +1360,8 @@ function confirmLeave(){
     kind:'jail', titleKey:'leaveTitle', title:t('leaveTitle'), ico:'🚪',
     text:t('leaveText'), eff:'', cls:'',
     btnKey:'leaveYes', btn:t('leaveYes'),
-    btn2Key:'restartNo', btn2:t('restartNo')
+    btn2Key:'restartNo', btn2:t('restartNo'),
+    local:true                     // resolved here, never sent to the host
   },
   ()=>{ doLeaveRoom(); },
   ()=>{ updateRollLabel(); },
@@ -2379,8 +2380,13 @@ function showEvent(opts, onOk, onAlt, silent){
   if(opts.deed){deed.style.display='table';deed.innerHTML=opts.deed;}
   else deed.style.display='none';
 
-  document.getElementById('card-close').textContent=opts.btn||t('ok');
+  const okBtn=document.getElementById('card-close');
+  okBtn.textContent=opts.btn||t('ok');
+  okBtn.disabled=false;              // clear any spectator lock from a previous popup
+  const wait=document.getElementById('card-waiting');
+  if(wait) wait.textContent='';
   const alt=document.getElementById('card-alt');
+  alt.disabled=false;
   if(opts.btn2){alt.style.display='block';alt.textContent=opts.btn2;}
   else alt.style.display='none';
 
