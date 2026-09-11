@@ -411,6 +411,14 @@ button:disabled{opacity:.35;cursor:default}
   letter-spacing:.5px;text-transform:uppercase;transition:all .15s;white-space:nowrap;
 }
 .tb-group button:hover{background:rgba(255,255,255,.2);border-color:#d4f0a0}
+/* icon-only controls: square, emoji-sized, no text metrics to fight */
+.tb-group button.icon-btn{
+  font-size:15px;line-height:1;padding:6px 9px;letter-spacing:0;
+  min-width:34px;display:inline-flex;align-items:center;justify-content:center;
+}
+#lang-bar-game button.icon-btn{font-size:15px;padding:6px 9px;min-width:34px}
+#lang-bar-game button.active{background:#d4f0a0;border-color:#d4f0a0;
+  box-shadow:0 0 0 1px #d4f0a0 inset}
 #lang-bar-game button{
   font-family:sans-serif;font-size:10px;font-weight:600;
   letter-spacing:0;text-transform:none;padding:5px 8px;
@@ -621,20 +629,20 @@ button:disabled{opacity:.35;cursor:default}
 <!-- top toolbar -->
 <div id="topbar">
   <div class="tb-title">
-    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.4</span>
+    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.5</span>
   </div>
   <div class="tb-controls">
   <div class="tb-group">
-    <button id="rot-left"  class="rot-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
-    <button id="rot-right" class="rot-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
-    <button id="view-toggle" onclick="toggle3d()">⬛ 3D View</button>
-    <button id="sound-toggle" onclick="toggleSound()">🔊 Sound</button>
+    <button id="rot-left"  class="rot-btn icon-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
+    <button id="rot-right" class="rot-btn icon-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
+    <button id="view-toggle" class="icon-btn" onclick="toggle3d()">⬛</button>
+    <button id="sound-toggle" class="icon-btn" onclick="toggleSound()">🔊</button>
   </div>
   <div class="tb-group" id="lang-bar-game">
-    <button data-lang="en" class="active" onclick="setLang('en')">🇬🇧 EN</button>
-    <button data-lang="th" onclick="setLang('th')">🇹🇭 ไทย</button>
-    <button data-lang="de" onclick="setLang('de')">🇩🇪 DE</button>
-    <button data-lang="nl" onclick="setLang('nl')">🇳🇱 NL</button>
+    <button data-lang="en" class="active icon-btn" onclick="setLang('en')">🇬🇧</button>
+    <button data-lang="th" class="icon-btn" onclick="setLang('th')">🇹🇭</button>
+    <button data-lang="de" class="icon-btn" onclick="setLang('de')">🇩🇪</button>
+    <button data-lang="nl" class="icon-btn" onclick="setLang('nl')">🇳🇱</button>
   </div>
   <div class="tb-group">
     <button id="restart-btn" onclick="toolbarAction()">↻ Restart</button>
@@ -768,7 +776,7 @@ const LANGS={
     cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
     leaveText:'Leave this online game? The computer will take over your player.',
     leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
-    aiTookOver:'🤖 Computer is now playing', version:'v1.4',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.5',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -821,7 +829,7 @@ const LANGS={
     cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
     leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
     leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
-    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.4',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.5',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -874,7 +882,7 @@ const LANGS={
     cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
     leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
     leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
-    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.4',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.5',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -927,7 +935,7 @@ const LANGS={
     cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
     leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
     leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
-    aiTookOver:'🤖 De computer speelt nu', version:'v1.4',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.5',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
@@ -1055,11 +1063,28 @@ function applyLang(){
   set('btn-start',t('startGame'));
   if(setupCount) renderPlayerSetup();
   if(players.length) updateRollLabel(); else set('btn-roll',t('roll'));
-  set('view-toggle', (typeof is3d!=='undefined'&&is3d)?t('viewFlat'):t('view3d'));
-  const rl=document.getElementById('rot-left'), rr=document.getElementById('rot-right');
-  if(rl) rl.title=t('rotLeft');
-  if(rr) rr.title=t('rotRight');
-  set('sound-toggle',(typeof soundOn==='undefined'||soundOn)?t('sound'):t('muted'));
+  // toolbar controls are icon-only – translate the tooltips, not the faces
+  // strip a leading emoji: the glyph is already the button face
+  const bare=str=>String(str).replace(/^[^\p{L}\p{N}]+/u,'').trim();
+  const tip=(id,key,icon)=>{
+    const el=document.getElementById(id); if(!el) return;
+    if(icon) el.textContent=icon;
+    const label=bare(t(key));
+    el.title=label;
+    if(el.setAttribute) el.setAttribute('aria-label',label);
+  };
+  const on3d=(typeof is3d!=='undefined'&&is3d);
+  tip('view-toggle', on3d?'viewFlat':'view3d', on3d?'⬜':'⬛');
+  tip('sound-toggle', (typeof soundOn==='undefined'||soundOn)?'sound':'muted',
+      (typeof soundOn==='undefined'||soundOn)?'🔊':'🔇');
+  tip('rot-left','rotLeft');
+  tip('rot-right','rotRight');
+  // language flags: name the language in the tooltip
+  document.querySelectorAll('#lang-bar-game button, #lang-bar button').forEach(btn=>{
+    const code=btn.dataset&&btn.dataset.lang;
+    if(code&&LANGS[code]){ btn.title=LANGS[code]._name;
+      if(btn.setAttribute) btn.setAttribute('aria-label',LANGS[code]._name); }
+  });
   set('btn-sell-props',t('sellPropsBtn'));
   set('broke-text',t('brokeWarn'));
   set('btn-play-again',t('playAgain'));
@@ -2915,7 +2940,11 @@ const SFX={
 function toggleSound(){
   soundOn=!soundOn;
   const b=document.getElementById('sound-toggle');
-  if(b) b.textContent=soundOn?t('sound'):t('muted');
+  if(b){
+    b.textContent=soundOn?'🔊':'🔇';
+    b.title=String(soundOn?t('sound'):t('muted')).replace(/^[^\p{L}\p{N}]+/u,'').trim();
+    if(b.setAttribute) b.setAttribute('aria-label',b.title);
+  }
   if(soundOn) SFX.click();
 }
 
@@ -2997,7 +3026,9 @@ function toggle3d(){
   bc.classList.toggle('view3d',is3d);
   const bw=document.getElementById('board-wrap');
   if(bw) bw.classList.toggle('is3d',is3d);
-  btn.textContent=is3d?t('viewFlat'):t('view3d');
+  btn.textContent=is3d?'⬜':'⬛';                 // icon only
+  btn.title=String(is3d?t('viewFlat'):t('view3d')).replace(/^[^\p{L}\p{N}]+/u,'').trim();
+  if(btn.setAttribute) btn.setAttribute('aria-label',btn.title);
   // rotation only makes sense in 3D – show the controls with the view
   ['rot-left','rot-right'].forEach(id=>{
     const b=document.getElementById(id);
