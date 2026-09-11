@@ -358,7 +358,23 @@ button:disabled{opacity:.35;cursor:default}
   .corner .corner-label span{font-size:11px !important}
   #center-logo{font-size:56px;letter-spacing:8px;padding:12px 28px}
   #center-sub{font-size:15px}
-  .center-roll{font-size:22px;padding:14px 34px;letter-spacing:2px}
+  /* Restart / Leave sits above the logo, inside the board centre */
+.center-restart{
+  align-self:center;margin-bottom:10px;
+  padding:5px 14px;font-size:11px;
+  background:rgba(27,58,10,.06);color:#5a6b4a;
+  border:1.5px solid rgba(27,58,10,.3);border-radius:5px;
+  font-family:'Georgia',serif;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;
+  position:relative;transform:translateZ(1px);
+}
+.center-restart:hover{background:rgba(183,28,28,.12);color:#b71c1c;border-color:#b71c1c}
+.center-restart.leave-mode{
+  background:rgba(230,126,34,.14);color:#b35309;border-color:#d98324;
+}
+.center-restart.leave-mode:hover{background:rgba(230,126,34,.28);color:#8a3d00}
+
+.center-roll{font-size:22px;padding:14px 34px;letter-spacing:2px}
   #turn-hint{font-size:15px}
   .die-wrap{width:70px;height:70px}
   .piece{width:34px;height:34px;font-size:21px}
@@ -378,7 +394,23 @@ button:disabled{opacity:.35;cursor:default}
 /* bigger tap targets on touch devices */
 @media (hover:none){
   #dice-area{padding:10px 14px}
-  .center-roll{padding:11px 30px;font-size:15px}
+  /* Restart / Leave sits above the logo, inside the board centre */
+.center-restart{
+  align-self:center;margin-bottom:10px;
+  padding:5px 14px;font-size:11px;
+  background:rgba(27,58,10,.06);color:#5a6b4a;
+  border:1.5px solid rgba(27,58,10,.3);border-radius:5px;
+  font-family:'Georgia',serif;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;
+  position:relative;transform:translateZ(1px);
+}
+.center-restart:hover{background:rgba(183,28,28,.12);color:#b71c1c;border-color:#b71c1c}
+.center-restart.leave-mode{
+  background:rgba(230,126,34,.14);color:#b35309;border-color:#d98324;
+}
+.center-restart.leave-mode:hover{background:rgba(230,126,34,.28);color:#8a3d00}
+
+.center-roll{padding:11px 30px;font-size:15px}
   .cell.inspectable:hover{filter:none}       /* no sticky hover on touch */
   .cell.inspectable:hover::before{content:none}
   #card-close,#card-alt{padding:12px 0}
@@ -410,7 +442,8 @@ button:disabled{opacity:.35;cursor:default}
   cursor:pointer;font-family:'Georgia',serif;font-weight:700;
   letter-spacing:.5px;text-transform:uppercase;transition:all .15s;white-space:nowrap;
 }
-.tb-group button:hover{background:rgba(255,255,255,.2);border-color:#d4f0a0}
+.tb-group button:hover:not(:disabled){background:rgba(255,255,255,.2);border-color:#d4f0a0}
+.tb-group button:disabled{opacity:.32;cursor:default;border-color:rgba(212,240,160,.2)}
 /* icon-only controls: square, emoji-sized, no text metrics to fight */
 .tb-group button.icon-btn{
   font-size:15px;line-height:1;padding:6px 9px;letter-spacing:0;
@@ -424,12 +457,7 @@ button:disabled{opacity:.35;cursor:default}
   letter-spacing:0;text-transform:none;padding:5px 8px;
 }
 #lang-bar-game button.active{background:#d4f0a0;color:#1b3a0a;border-color:#d4f0a0}
-#restart-btn{border-color:rgba(255,180,160,.5);color:#ffd9cc}
-#restart-btn.leave-mode{border-color:rgba(255,220,150,.6);color:#ffe9b8;
-  background:rgba(255,170,60,.18)}
-#restart-btn.leave-mode:hover{background:rgba(255,170,60,.34)}
 .rot-btn{font-size:15px;line-height:1;padding:3px 10px;letter-spacing:0}
-#restart-btn:hover{background:rgba(255,120,90,.28);border-color:#ffb4a0}
 
 /* ── CENTER ROLL CONTROL ── */
 #dice-area{cursor:pointer;border-radius:10px;padding:6px 10px;transition:background .15s,transform .15s}
@@ -442,6 +470,22 @@ button:disabled{opacity:.35;cursor:default}
   0%,100%{box-shadow:0 0 0 0 rgba(27,58,10,0)}
   50%    {box-shadow:0 0 0 7px rgba(27,58,10,.10)}
 }
+/* Restart / Leave sits above the logo, inside the board centre */
+.center-restart{
+  align-self:center;margin-bottom:10px;
+  padding:5px 14px;font-size:11px;
+  background:rgba(27,58,10,.06);color:#5a6b4a;
+  border:1.5px solid rgba(27,58,10,.3);border-radius:5px;
+  font-family:'Georgia',serif;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;
+  position:relative;transform:translateZ(1px);
+}
+.center-restart:hover{background:rgba(183,28,28,.12);color:#b71c1c;border-color:#b71c1c}
+.center-restart.leave-mode{
+  background:rgba(230,126,34,.14);color:#b35309;border-color:#d98324;
+}
+.center-restart.leave-mode:hover{background:rgba(230,126,34,.28);color:#8a3d00}
+
 .center-roll{
   position:relative;transform:translateZ(1px);
   margin-top:12px;padding:9px 26px;font-size:14px;
@@ -629,12 +673,12 @@ button:disabled{opacity:.35;cursor:default}
 <!-- top toolbar -->
 <div id="topbar">
   <div class="tb-title">
-    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.5</span>
+    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.6</span>
   </div>
   <div class="tb-controls">
   <div class="tb-group">
-    <button id="rot-left"  class="rot-btn icon-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
-    <button id="rot-right" class="rot-btn icon-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
+    <button id="rot-left"  class="rot-btn icon-btn" onclick="rotateBoard(-90)" disabled>⟲</button>
+    <button id="rot-right" class="rot-btn icon-btn" onclick="rotateBoard(90)"  disabled>⟳</button>
     <button id="view-toggle" class="icon-btn" onclick="toggle3d()">⬛</button>
     <button id="sound-toggle" class="icon-btn" onclick="toggleSound()">🔊</button>
   </div>
@@ -643,9 +687,6 @@ button:disabled{opacity:.35;cursor:default}
     <button data-lang="th" class="icon-btn" onclick="setLang('th')">🇹🇭</button>
     <button data-lang="de" class="icon-btn" onclick="setLang('de')">🇩🇪</button>
     <button data-lang="nl" class="icon-btn" onclick="setLang('nl')">🇳🇱</button>
-  </div>
-  <div class="tb-group">
-    <button id="restart-btn" onclick="toolbarAction()">↻ Restart</button>
   </div>
   </div>
 </div>
@@ -776,7 +817,7 @@ const LANGS={
     cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
     leaveText:'Leave this online game? The computer will take over your player.',
     leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
-    aiTookOver:'🤖 Computer is now playing', version:'v1.5',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.6',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -829,7 +870,7 @@ const LANGS={
     cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
     leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
     leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
-    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.5',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.6',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -882,7 +923,7 @@ const LANGS={
     cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
     leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
     leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
-    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.5',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.6',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -935,7 +976,7 @@ const LANGS={
     cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
     leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
     leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
-    aiTookOver:'🤖 De computer speelt nu', version:'v1.5',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.6',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
@@ -1182,8 +1223,8 @@ function buildBoard(){
     5:'<i class="pip p-tl"></i><i class="pip p-tr"></i><i class="pip p-mc"></i><i class="pip p-bl"></i><i class="pip p-br"></i>',
     6:'<i class="pip p-tl"></i><i class="pip p-tr"></i><i class="pip p-ml"></i><i class="pip p-mr"></i><i class="pip p-bl"></i><i class="pip p-br"></i>',
   };
-  setTimeout(()=>{ if(typeof updateRollLabel==='function') updateRollLabel(); },0);
   centerDiv.innerHTML=`
+    <button id="restart-btn" class="center-restart" onclick="toolbarAction()">↻ Restart</button>
     <div id="center-logo">MONOPOLY</div>
     <div id="center-sub">Classic Edition</div>
     <div id="dice-area" class="disabled" onclick="rollDice()" title="">
@@ -1202,6 +1243,10 @@ function buildBoard(){
     <button id="btn-roll" class="center-roll" onclick="rollDice()" disabled>🎲 Roll</button>
     <div id="turn-hint"></div>
   `;
+  // The roll and restart buttons are part of that template, so they were just
+  // recreated from markup defaults. Put them back into their real state.
+  if(typeof updateRollLabel==='function')  updateRollLabel();
+  if(typeof updateToolbarBtn==='function') updateToolbarBtn();
 }
 
 function makeEmpty(){
@@ -2995,6 +3040,16 @@ if(window&&window.addEventListener){
 let is3d=false;
 let boardRot=0;                       // 0 / 90 / 180 / 270
 
+/* Rotation only means something once the board is tilted, so the buttons are
+   greyed out in flat view rather than pulled from the bar — the toolbar then
+   keeps a stable width instead of reflowing on every toggle. */
+function updateRotButtons(){
+  ['rot-left','rot-right'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){ b.disabled=!is3d; b.style.display=''; }
+  });
+}
+
 function rotateBoard(delta){
   if(!is3d) return;
   boardRot=(boardRot+delta+360)%360;
@@ -3029,11 +3084,7 @@ function toggle3d(){
   btn.textContent=is3d?'⬜':'⬛';                 // icon only
   btn.title=String(is3d?t('viewFlat'):t('view3d')).replace(/^[^\p{L}\p{N}]+/u,'').trim();
   if(btn.setAttribute) btn.setAttribute('aria-label',btn.title);
-  // rotation only makes sense in 3D – show the controls with the view
-  ['rot-left','rot-right'].forEach(id=>{
-    const b=document.getElementById(id);
-    if(b) b.style.display=is3d?'':'none';
-  });
+  updateRotButtons();
   if(!is3d) boardRot=0;               // flat view always sits square
   applyBoardRotation();
 }
@@ -3043,6 +3094,7 @@ buildBoard();
 applyLang();
 updateRollLabel();
 applyBoardRotation();
+updateRotButtons();
 fitBoard();
 </script>
 </body>
