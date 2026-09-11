@@ -309,13 +309,15 @@ button:disabled{opacity:.35;cursor:default}
   #ui{flex-direction:column;align-items:center}
   #panel{width:100%;max-width:782px;min-height:0}
   #log{flex:0 0 auto;height:160px}
-  .tb-brand{font-size:15px;letter-spacing:2px}
+  #tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;letter-spacing:0;align-self:center;margin-right:auto;opacity:.85}
+.tb-brand{font-size:15px;letter-spacing:2px}
 }
 
 @media (max-width:720px){
   body{padding:8px 8px 14px;gap:8px}
   #topbar{gap:6px;padding:7px 8px;justify-content:center}
-  .tb-brand{width:100%;text-align:center;margin-right:0;font-size:14px;letter-spacing:2px}
+  #tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;letter-spacing:0;align-self:center;margin-right:auto;opacity:.85}
+.tb-brand{width:100%;text-align:center;margin-right:0;font-size:14px;letter-spacing:2px}
   .tb-group{flex:1;justify-content:center}
   .tb-group button{padding:6px 8px;font-size:10px}
   #lang-bar-game button{padding:6px 7px;font-size:10px}
@@ -369,10 +371,11 @@ button:disabled{opacity:.35;cursor:default}
   background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);
   border-radius:8px;flex-wrap:wrap;
 }
+#tb-version{font-family:sans-serif;font-size:10px;font-weight:600;color:#8fb36a;letter-spacing:0;align-self:center;margin-right:auto;opacity:.85}
 .tb-brand{
   font-family:'Georgia',serif;font-style:italic;font-weight:700;
   font-size:17px;letter-spacing:3px;color:#d4f0a0;text-transform:uppercase;
-  margin-right:auto;white-space:nowrap;
+  white-space:nowrap;margin-right:6px;
 }
 .tb-group{display:flex;gap:5px;flex-wrap:wrap}
 .tb-group button{
@@ -389,6 +392,9 @@ button:disabled{opacity:.35;cursor:default}
 }
 #lang-bar-game button.active{background:#d4f0a0;color:#1b3a0a;border-color:#d4f0a0}
 #restart-btn{border-color:rgba(255,180,160,.5);color:#ffd9cc}
+#restart-btn.leave-mode{border-color:rgba(255,220,150,.6);color:#ffe9b8;
+  background:rgba(255,170,60,.18)}
+#restart-btn.leave-mode:hover{background:rgba(255,170,60,.34)}
 .rot-btn{font-size:15px;line-height:1;padding:3px 10px;letter-spacing:0}
 #restart-btn:hover{background:rgba(255,120,90,.28);border-color:#ffb4a0}
 
@@ -589,7 +595,7 @@ button:disabled{opacity:.35;cursor:default}
 
 <!-- top toolbar -->
 <div id="topbar">
-  <div class="tb-brand" id="tb-brand">MONOPOLY</div>
+  <div class="tb-brand" id="tb-brand">MONOPOLY</div><span id="tb-version">v1.0</span>
   <div class="tb-group">
     <button id="rot-left"  class="rot-btn" onclick="rotateBoard(-90)" style="display:none">⟲</button>
     <button id="rot-right" class="rot-btn" onclick="rotateBoard(90)"  style="display:none">⟳</button>
@@ -603,7 +609,7 @@ button:disabled{opacity:.35;cursor:default}
     <button data-lang="nl" onclick="setLang('nl')">🇳🇱 NL</button>
   </div>
   <div class="tb-group">
-    <button id="restart-btn" onclick="confirmRestart()">↻ Restart</button>
+    <button id="restart-btn" onclick="toolbarAction()">↻ Restart</button>
   </div>
 </div>
 
@@ -643,7 +649,7 @@ button:disabled{opacity:.35;cursor:default}
           <button id="btn-join" onclick="joinRoom()">Join</button>
         </div>
         <div id="net-status"></div>
-        <button id="btn-back-mode" style="width:100%;margin-top:10px" onclick="backToMode()">←</button>
+        <button id="btn-cancel-online" style="width:100%;margin-top:10px" onclick="cancelOnline()">← Cancel</button>
       </div>
 
       <!-- host lobby -->
@@ -661,12 +667,14 @@ button:disabled{opacity:.35;cursor:default}
         <div id="lobby-count" style="font-size:11px;color:#666;margin-bottom:6px">1 / 6</div>
         <div id="lobby-list"></div>
         <button class="primary" id="btn-start-online" style="width:100%;margin-top:12px" onclick="hostStartOnline()">Start Game</button>
+        <button id="btn-cancel-host" style="width:100%;margin-top:6px" onclick="cancelOnline()">← Cancel</button>
       </div>
 
       <!-- client lobby -->
       <div id="lobby-client" style="display:none">
         <div id="wait-msg" style="font-size:12px;color:#555;margin-bottom:10px">Connected. Waiting for the host to start…</div>
         <div id="lobby-list-c"></div>
+        <button id="btn-cancel-client" style="width:100%;margin-top:10px" onclick="cancelOnline()">← Cancel</button>
       </div>
 
       <div id="setup-step1" style="display:none">
@@ -710,6 +718,10 @@ button:disabled{opacity:.35;cursor:default}
 const LANGS={
   en:{_name:'English', _flag:'🇬🇧',
     title:'Monopoly', howMany:'How many players?',
+    cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
+    leaveText:'Leave this online game? The computer will take over your player.',
+    leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.0',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -759,6 +771,10 @@ const LANGS={
   },
   th:{_name:'ไทย', _flag:'🇹🇭',
     title:'เกมเศรษฐี', howMany:'มีผู้เล่นกี่คน?',
+    cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
+    leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
+    leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.0',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -808,6 +824,10 @@ const LANGS={
   },
   de:{_name:'Deutsch', _flag:'🇩🇪',
     title:'Monopoly', howMany:'Wie viele Spieler?',
+    cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
+    leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
+    leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.0',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -857,6 +877,10 @@ const LANGS={
   },
   nl:{_name:'Nederlands', _flag:'🇳🇱',
     title:'Monopoly', howMany:'Hoeveel spelers?',
+    cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
+    leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
+    leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.0',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
@@ -959,10 +983,13 @@ function applyLang(){
   const set=(id,txt)=>{const e=document.getElementById(id);if(e)e.textContent=txt;};
   set('setup-title',t('title'));
   set('tb-brand',t('title'));
-  set('restart-btn',t('restart'));
+  updateToolbarBtn();
   set('setup-sub',t('howMany'));
   set('theme-label',t('boardTheme'));
   set('theme-label-net',t('boardTheme'));
+  ['btn-cancel-online','btn-cancel-host','btn-cancel-client']
+    .forEach(id=>set(id,t('cancelBtn')));
+  set('tb-version',t('version'));
   set('mode-sub',t('playMode'));
   set('btn-local',t('playLocal'));
   set('btn-online',t('playOnline'));
@@ -1246,6 +1273,10 @@ function hostHandle(msg,conn){
     renderLobby();
     return;
   }
+  if(msg.t==='leave'){
+    hostPlayerLeft(msg.seat,msg.name);
+    return;
+  }
   if(msg.t==='intent'){
     // only the player whose turn it is may act
     if(msg.seat!==current && msg.a!=='chat') return;
@@ -1283,6 +1314,88 @@ function clientDispatch(msg){
   }
 }
 
+
+/* ── LEAVING / CANCELLING A ROOM ────────────────────────────── */
+
+/* tear the peer connection down and go back to being a local game */
+function netTeardown(){
+  try{
+    if(NET.hostConn && NET.hostConn.close) NET.hostConn.close();
+    NET.conns.forEach(c=>{ if(c.close) c.close(); });
+    if(NET.peer && NET.peer.destroy) NET.peer.destroy();
+  }catch(e){}
+  NET.mode='local'; NET.peer=null; NET.conns=[]; NET.hostConn=null;
+  NET.seat=-1; NET.roomId=null; NET.lobby=[]; NET.popup=false;
+  updateToolbarBtn();
+}
+
+/* Cancel from any of the online screens, before the game starts */
+function cancelOnline(){
+  netTeardown();
+  ['online-choice','lobby-host','lobby-client'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  const m=document.getElementById('setup-mode'); if(m) m.style.display='block';
+  netStatus('');
+  if(typeof SFX!=='undefined') SFX.click();
+}
+
+/* the toolbar button is Restart normally, Leave when you've joined a room */
+function updateToolbarBtn(){
+  const b=document.getElementById('restart-btn');
+  if(!b) return;
+  const joined = NET.isClient() && players.length>0;
+  b.textContent = joined ? t('leaveOnline') : t('restart');
+  b.classList.toggle('leave-mode', joined);
+}
+
+function toolbarAction(){
+  if(NET.isClient() && players.length>0) confirmLeave();
+  else confirmRestart();
+}
+
+function confirmLeave(){
+  if(typeof SFX!=='undefined') SFX.click();
+  showEvent({
+    kind:'jail', titleKey:'leaveTitle', title:t('leaveTitle'), ico:'🚪',
+    text:t('leaveText'), eff:'', cls:'',
+    btnKey:'leaveYes', btn:t('leaveYes'),
+    btn2Key:'restartNo', btn2:t('restartNo')
+  },
+  ()=>{ doLeaveRoom(); },
+  ()=>{ updateRollLabel(); },
+  true);
+}
+
+/* client side: tell the host, then carry on offline against the AI */
+function doLeaveRoom(){
+  const mySeat=NET.seat;
+  try{ NET.send({t:'leave',seat:mySeat,name:players[mySeat]?players[mySeat].name:''}); }catch(e){}
+  setTimeout(()=>netTeardown(),120);          // let the message flush first
+  // every other seat is now out of reach, so hand them to the computer
+  players.forEach((p,i)=>{ if(i!==mySeat) p.isAI=true; });
+  addLog('── '+t('youLeft')+' ──','sep');
+  renderPlayers();
+  updateRollLabel();
+  updateToolbarBtn();
+  setCtrl(current===mySeat,false,false);
+}
+
+/* host side: a seat went away – log it and let the computer take over */
+function hostPlayerLeft(seat,name){
+  if(seat<0||seat>=players.length) return;
+  const p=players[seat];
+  p.isAI=true;
+  addLog('── '+(name||p.name)+' '+t('leftRoom')+' ──','sep');
+  addLog(t('aiTookOver')+' '+p.name,'imp');
+  toast('🚪 '+(name||p.name)+' '+t('leftRoom'));
+  NET.lobby=NET.lobby.filter(l=>l.seat!==seat);
+  renderLobby();
+  renderPlayers();
+  netSync();
+  if(typeof aiTick==='function') aiTick();     // the bot picks up immediately
+}
+
 /* ── PEERJS CONNECTION ──────────────────────────────────────── */
 function makeRoomCode(){
   const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no confusable chars
@@ -1310,9 +1423,10 @@ function hostRoom(){
     NET.conns.push(conn);
     conn.on('data',m=>hostHandle(m,conn));
     conn.on('close',()=>{
+      const gone=NET.lobby.find(l=>l.conn===conn);
       NET.conns=NET.conns.filter(c=>c!==conn);
-      NET.lobby=NET.lobby.filter(l=>l.conn!==conn);
-      renderLobby();
+      if(gone && players.length) hostPlayerLeft(gone.seat,gone.name);
+      else { NET.lobby=NET.lobby.filter(l=>l.conn!==conn); renderLobby(); }
     });
   });
   NET.peer.on('error',e=>netStatus(t('netError')+': '+e.type,'err'));
@@ -1609,6 +1723,7 @@ function beginGame(){
   addLog(players[0].name+t('turnOf'));
   setCtrl(true,false,false);
   fitBoard();
+  updateToolbarBtn();
 }
 
 /* ── AI ENGINE ── */
