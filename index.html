@@ -6,10 +6,10 @@
 <title>Monopoly</title>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap');</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap');</style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Georgia','Noto Sans Thai',serif;background:#2d5016;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px 16px 16px;gap:10px}
+body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP',serif;background:#2d5016;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px 16px 16px;gap:10px}
 
 /* ── BOARD ── */
 #board-container{position:relative;width:782px;height:782px;flex-shrink:0}
@@ -17,9 +17,11 @@ body{font-family:'Georgia','Noto Sans Thai',serif;background:#2d5016;min-height:
 
 /* cells */
 .cell{border:1px solid #1b3a0a;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.cell .cname{font-family:'Georgia','Noto Sans Thai',serif;font-size:8px;text-align:center;line-height:1.25;color:#111;padding:0 3px;word-break:break-word}
+.cell .cname{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP',serif;font-size:8px;text-align:center;line-height:1.25;color:#111;padding:0 3px;word-break:break-word}
 .cell .cprice{font-size:7.5px;color:#333;font-family:monospace;margin-top:1px}
 .cell .cicon{font-size:19px;line-height:1;margin-bottom:1px}
+/* CJK names are denser than Latin – ease the line height so they fit */
+.cell.cjk .cname{line-height:1.35;letter-spacing:0}
 /* clickable squares */
 .cell.inspectable{cursor:pointer}
 .cell.inspectable:hover{filter:brightness(1.08)}
@@ -660,6 +662,11 @@ button:disabled{opacity:.35;cursor:default}
           <option value="thailand">🇹🇭 Thailand</option>
           <option value="germany">🇩🇪 Deutschland</option>
           <option value="netherlands">🇳🇱 Nederland</option>
+          <option value="china">🇨🇳 中国 China</option>
+          <option value="japan">🇯🇵 日本 Japan</option>
+          <option value="france">🇫🇷 France</option>
+          <option value="italy">🇮🇹 Italia</option>
+          <option value="spain">🇪🇸 España</option>
         </select>
         <div id="room-label" style="font-size:11px;color:#7a7a5a;text-transform:uppercase;letter-spacing:.5px">Room code</div>
         <div id="room-code">-----</div>
@@ -684,6 +691,11 @@ button:disabled{opacity:.35;cursor:default}
           <option value="thailand">🇹🇭 Thailand</option>
           <option value="germany">🇩🇪 Deutschland</option>
           <option value="netherlands">🇳🇱 Nederland</option>
+          <option value="china">🇨🇳 中国 China</option>
+          <option value="japan">🇯🇵 日本 Japan</option>
+          <option value="france">🇫🇷 France</option>
+          <option value="italy">🇮🇹 Italia</option>
+          <option value="spain">🇪🇸 España</option>
         </select>
         <p id="setup-sub" style="font-size:12px;color:#555;margin:14px 0">How many players?</p>
         <div class="btns">
@@ -1608,6 +1620,51 @@ const THEMES={
            'Leidsestraat','Kalverstraat'],
     rails:['Station Amsterdam','Station Rotterdam','Station Utrecht','Station Den Haag'],
     utils:['Elektriciteitsbedrijf','Waterleiding'] },
+
+  china:{ label:'🇨🇳 中国',
+    props:['鼓楼大街','什刹海','南锣鼓巷','雍和宫','王府井大街',
+           '前门大街','大栅栏','天安门广场','西单北大街','金融街',
+           '三里屯','中关村大街','建国门外大街','国贸','淮海中路',
+           '南京西路','外滩','解放碑','春熙路','天河路',
+           '深南大道','陆家嘴'],
+    rails:['北京站','上海站','广州站','西安站'],
+    utils:['国家电网','自来水公司'] },
+
+  japan:{ label:'🇯🇵 日本',
+    props:['浅草','上野','両国','日暮里','神楽坂',
+           '秋葉原','神保町','日本橋','人形町','築地',
+           '新橋','品川','恵比寿','中目黒','渋谷',
+           '原宿','表参道','新宿','六本木','麻布十番',
+           '青山','銀座'],
+    rails:['東京駅','新宿駅','大阪駅','京都駅'],
+    utils:['東京電力','東京水道局'] },
+
+  france:{ label:'🇫🇷 France',
+    props:['Rue Lecourbe','Boulevard de Belleville','Rue de Vaugirard','Rue de Courcelles','Avenue de la République',
+           'Boulevard de la Villette','Avenue de Neuilly','Rue de Paradis','Avenue Mozart','Boulevard Saint-Michel',
+           'Place Pigalle','Avenue Matignon','Boulevard Malesherbes','Avenue Henri-Martin','Faubourg Saint-Honoré',
+           'Place de la Bourse','Rue La Fayette','Avenue de Breteuil','Avenue Foch','Boulevard des Capucines',
+           'Avenue des Champs-Élysées','Rue de la Paix'],
+    rails:['Gare Montparnasse','Gare de Lyon','Gare du Nord','Gare Saint-Lazare'],
+    utils:['Compagnie d\'Électricité','Compagnie des Eaux'] },
+
+  italy:{ label:'🇮🇹 Italia',
+    props:['Vicolo Corto','Vicolo Stretto','Bastioni Gran Sasso','Viale Monterosa','Viale Vesuvio',
+           'Via Accademia','Corso Ateneo','Piazza Università','Via Verdi','Corso Raffaello',
+           'Piazza Dante','Via Marco Polo','Corso Magellano','Largo Colombo','Viale Costantino',
+           'Viale Traiano','Piazza Giulio Cesare','Via Roma','Corso Impero','Largo Augusto',
+           'Viale dei Giardini','Parco della Vittoria'],
+    rails:['Stazione Nord','Stazione Est','Stazione Sud','Stazione Termini'],
+    utils:['Società Elettrica','Società Acqua Potabile'] },
+
+  spain:{ label:'🇪🇸 España',
+    props:['Calle Badajoz','Calle Ourense','Calle Alberto Aguilera','Calle Bravo Murillo','Avenida Reina Victoria',
+           'Calle Sagasta','Calle Fuencarral','Calle Hortaleza','Avenida Felipe II','Calle Alcalá',
+           'Gran Vía','Calle Bailén','Plaza de España','Calle Goya','Calle Velázquez',
+           'Calle Príncipe de Vergara','Plaza Mayor','Paseo de Gracia','Las Ramblas','Calle Serrano',
+           'Paseo del Prado','Paseo de la Castellana'],
+    rails:['Estación Atocha','Estación Chamartín','Estación Sants','Estación Norte'],
+    utils:['Compañía Eléctrica','Compañía de Aguas'] },
 };
 
 let THEME='classic';
