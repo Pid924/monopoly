@@ -436,14 +436,14 @@ button:disabled{opacity:.35;cursor:default}
 #join-code{letter-spacing:3px;font-weight:700;text-align:center}
 
 /* board theme picker */
-#theme-label{display:block;font-family:sans-serif;font-size:11px;font-weight:700;
+#theme-label,#theme-label-net{display:block;font-family:sans-serif;font-size:11px;font-weight:700;
   letter-spacing:.5px;text-transform:uppercase;color:#7a7a5a;margin-bottom:5px;text-align:left}
-#theme-select{
+#theme-select,#theme-select-net{
   width:100%;padding:7px 9px;font-size:12px;font-family:sans-serif;font-weight:600;
   color:#1b3a0a;background:#fffdf5;border:1.5px solid #3a7a1a;border-radius:5px;
   cursor:pointer;outline:none;
 }
-#theme-select:focus{border-color:#1b3a0a;box-shadow:0 0 0 2px rgba(58,122,26,.2)}
+#theme-select:focus,#theme-select-net:focus{border-color:#1b3a0a;box-shadow:0 0 0 2px rgba(58,122,26,.2)}
 
 /* player type setup rows */
 #player-setup-list{display:flex;flex-direction:column;gap:6px}
@@ -648,6 +648,13 @@ button:disabled{opacity:.35;cursor:default}
 
       <!-- host lobby -->
       <div id="lobby-host" style="display:none">
+        <label id="theme-label-net" for="theme-select-net">Board theme</label>
+        <select id="theme-select-net" onchange="setTheme(this.value)" style="margin-bottom:12px">
+          <option value="classic">🇺🇸 Classic (USA)</option>
+          <option value="thailand">🇹🇭 Thailand</option>
+          <option value="germany">🇩🇪 Deutschland</option>
+          <option value="netherlands">🇳🇱 Nederland</option>
+        </select>
         <div id="room-label" style="font-size:11px;color:#7a7a5a;text-transform:uppercase;letter-spacing:.5px">Room code</div>
         <div id="room-code">-----</div>
         <div id="room-hint" style="font-size:10px;color:#999;margin-bottom:10px">Share this code with your friends</div>
@@ -955,6 +962,7 @@ function applyLang(){
   set('restart-btn',t('restart'));
   set('setup-sub',t('howMany'));
   set('theme-label',t('boardTheme'));
+  set('theme-label-net',t('boardTheme'));
   set('mode-sub',t('playMode'));
   set('btn-local',t('playLocal'));
   set('btn-online',t('playOnline'));
@@ -1042,6 +1050,8 @@ function sqPixelCenter(i){
 }
 
 function buildBoard(){
+  // NOTE: this recreates #btn-roll / #dice-area from scratch, and the markup
+  // ships them disabled. updateRollLabel() at the end restores the real state.
   const board=document.getElementById('board');
   board.innerHTML='';
   const cells=[];
@@ -1069,6 +1079,7 @@ function buildBoard(){
     5:'<i class="pip p-tl"></i><i class="pip p-tr"></i><i class="pip p-mc"></i><i class="pip p-bl"></i><i class="pip p-br"></i>',
     6:'<i class="pip p-tl"></i><i class="pip p-tr"></i><i class="pip p-ml"></i><i class="pip p-mr"></i><i class="pip p-bl"></i><i class="pip p-br"></i>',
   };
+  setTimeout(()=>{ if(typeof updateRollLabel==='function') updateRollLabel(); },0);
   centerDiv.innerHTML=`
     <div id="center-logo">MONOPOLY</div>
     <div id="center-sub">Classic Edition</div>
@@ -1149,6 +1160,7 @@ const NET={
   lobby:[],            // host: [{seat,name,conn}]
   myName:'',
   hostName:'',
+  popup:false,
   transport:null,      // test hook – lets the suite swap PeerJS out
 
   isHost(){ return this.mode==='host'; },
@@ -1184,12 +1196,14 @@ function snapshot(){
       pos:p.pos, money:p.money, jail:p.jail, jailT:p.jailT,
       bankrupt:p.bankrupt, props:p.props.slice()
     })),
-    current, rolled, moving, turnEnding, doublesCount, lastWasDoubles
+    current, rolled, moving, turnEnding, doublesCount, lastWasDoubles,
+    popup: !!lastEvent          // authoritative: is a decision pending?
   };
 }
 
 function applySnapshot(s){
-  if(s.theme&&s.theme!==THEME) applyTheme(s.theme);
+  let rebuilt=false;
+  if(s.theme&&s.theme!==THEME){ applyTheme(s.theme); buildBoard(); rebuilt=true; }
   const fresh=(players.length!==s.players.length);
   s.players.forEach((sp,i)=>{
     let p=players[i];
@@ -1203,10 +1217,18 @@ function applySnapshot(s){
   players.length=s.players.length;
   current=s.current; rolled=s.rolled; moving=s.moving;
   turnEnding=s.turnEnding; doublesCount=s.doublesCount; lastWasDoubles=s.lastWasDoubles;
-  if(fresh) spawnPieces();
+  NET.popup=!!s.popup;
+  // self-heal: if the host says no popup is pending, make sure ours is gone
+  if(!s.popup && NET.isClient()){
+    const ov=document.getElementById('card-overlay');
+    if(ov&&ov.style.display==='flex'){ ov.style.display='none'; lastEvent=null;
+      cardResolve=null; cardAltResolve=null; }
+  }
+  if(fresh||rebuilt) spawnPieces();
   players.forEach((p,i)=>{ if(p.el) placePiece(p,p.pos,i); });
   renderPlayers();
   updateRollLabel();
+  if(rebuilt){ applyBoardRotation(); fitBoard(); }
 }
 
 /* ── HOST: broadcast helpers ────────────────────────────────── */
@@ -1236,10 +1258,19 @@ function hostHandle(msg,conn){
 }
 
 function clientHandle(msg){
+  clientDispatch(msg);
+  // whatever arrived, the button must reflect the latest known state
+  if(players.length && typeof updateRollLabel==='function') updateRollLabel();
+}
+
+function clientDispatch(msg){
   switch(msg.t){
     case 'seat':   NET.seat=msg.seat; NET.hostName=msg.host||NET.hostName; renderLobby(); break;
     case 'lobby':  NET.lobby=msg.list; NET.hostName=msg.host||DEFAULT_NAMES[0]; renderLobby(); break;
     case 'start':  netStartGame(msg); break;
+    case 'theme':  if(msg.k!==THEME){ applyTheme(msg.k); buildBoard();
+                     if(players.length){ spawnPieces(); renderPlayers(); }
+                     applyBoardRotation(); fitBoard(); } break;
     case 'sync':   applySnapshot(msg.s); break;
     case 'log':    addLog(msg.m,msg.c); break;
     case 'toast':  toast(msg.m); break;
@@ -1477,8 +1508,13 @@ function applyTheme(key){
 
 function setTheme(key){
   applyTheme(key);
-  const sel=document.getElementById('theme-select');
-  if(sel && sel.value!==key) sel.value=key;
+  ['theme-select','theme-select-net'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(sel && sel.value!==key) sel.value=key;
+  });
+  // in a room, the host's choice is everyone's choice
+  if(NET.isHost()) NET.broadcast({t:'theme',k:key});
+  if(NET.isClient()) return;        // clients only follow
   if(players.length){ buildBoard(); repositionAll(); renderPlayers(); updateRollLabel(); applyBoardRotation(); }
   if(typeof SFX!=='undefined') SFX.click();
 }
@@ -1736,14 +1772,27 @@ function updateRollLabel(){
   const p=players[current];
   const again=(doublesCount>0);
   if(b) b.textContent=(p?p.initial+' ':'🎲 ')+(again?t('rollAgain'):t('rollShort'));
-  let canRoll=!!(b&&!b.disabled);
-  if(NET.isOnline()&&!NET.myTurn()) canRoll=false;
+  let canRoll;
+  if(NET.isClient()){
+    // a client gets no setCtrl calls – work it out from the synced state
+    canRoll = NET.myTurn() && !rolled && !moving && !turnEnding
+              && !NET.popup                       // synced from the host
+              && !(p && p.bankrupt);
+  } else {
+    canRoll = !!(b && !b.disabled);                 // setCtrl set the base
+    if(NET.isOnline() && !NET.myTurn()) canRoll=false;
+  }
+  if(b) b.disabled=!canRoll;      // <- the button state must match what we show
   if(area){
     area.classList.toggle('disabled',!canRoll);
     area.classList.toggle('ready',canRoll);
     area.title=canRoll?t('clickDice'):'';
   }
-  if(hint) hint.textContent=canRoll?(p?p.name+t('turnOf'):''):'';
+  if(hint){
+    if(canRoll) hint.textContent=p?p.name+t('turnOf'):'';
+    else if(NET.isOnline()&&p&&!NET.myTurn()) hint.textContent=t('waitingFor')+' '+p.name;
+    else hint.textContent='';
+  }
 }
 
 function setCtrl(roll,buy,end){
@@ -1933,15 +1982,21 @@ const PIP_HTML={
 function rollDice(relayed){
   if(!players.length)return;            // game hasn't started yet
   if(NET.isClient()){                   // clients never run rules – ask the host
-    if(NET.myTurn()) NET.send({t:'intent',a:'roll',seat:NET.seat});
+    const ok = NET.myTurn() && !rolled && !moving && !turnEnding && !NET.popup;
+    if(ok) NET.send({t:'intent',a:'roll',seat:NET.seat});
     return;
   }
   // the host may act for its own seat, for AI seats, or when relaying a
   // client's intent – but not for a remote human on a local click
   if(!relayed && NET.isOnline() && !NET.controlsSeat(current) && !players[current].isAI) return;
   if(rolled||moving||turnEnding)return;
-  const rb=document.getElementById('btn-roll');
-  if(rb&&rb.disabled)return;            // dice area is clickable too – honour the same gate
+  // These gate LOCAL input only. A relayed intent is the host acting on a
+  // remote player's behalf, so its own button state is irrelevant.
+  if(!relayed){
+    const rb=document.getElementById('btn-roll');
+    if(rb&&rb.disabled)return;          // the dice area is a click target too
+    if(NET.isOnline()&&!NET.myTurn())return;
+  }
   if(popupOpen&&popupOpen())return;
   const p=players[current];
   const d1=Math.ceil(Math.random()*6),d2=Math.ceil(Math.random()*6),total=d1+d2;
@@ -2215,7 +2270,7 @@ function showEvent(opts, onOk, onAlt, silent){
   else alt.style.display='none';
 
   document.getElementById('card-overlay').style.display='flex';
-  if(NET.isHost()&&!silent)
+  if(NET.isHost()&&!silent&&!opts.local)
     NET.broadcast({t:'popup',opts,hasAlt:!!opts.btn2,seat:current});
   if(!silent){ if(opts.kind==='jail')SFX.jail(); else SFX.card(); }
   setCtrl(false,false,false);
@@ -2225,6 +2280,13 @@ function showEvent(opts, onOk, onAlt, silent){
 }
 
 function closeCard(relayed){
+  // a local-only popup (deed view, restart prompt) always closes right here
+  if(lastEvent && lastEvent.opts && lastEvent.opts.local){
+    document.getElementById('card-overlay').style.display='none';
+    const r=cardResolve; lastEvent=null; cardResolve=null; cardAltResolve=null;
+    if(typeof r==='function') r();
+    return;
+  }
   if(NET.isClient()){ if(NET.myTurn()) NET.send({t:'intent',a:'ok',seat:NET.seat}); return; }
   if(NET.isHost()) NET.broadcast({t:'close'});
   lastEvent=null;
@@ -2234,6 +2296,12 @@ function closeCard(relayed){
 }
 
 function closeCardAlt(relayed){
+  if(lastEvent && lastEvent.opts && lastEvent.opts.local){
+    document.getElementById('card-overlay').style.display='none';
+    const r=cardAltResolve; lastEvent=null; cardResolve=null; cardAltResolve=null;
+    if(typeof r==='function') r();
+    return;
+  }
   if(NET.isClient()){ if(NET.myTurn()) NET.send({t:'intent',a:'alt',seat:NET.seat}); return; }
   if(NET.isHost()) NET.broadcast({t:'close'});
   lastEvent=null;
@@ -2322,6 +2390,7 @@ function inspectSquare(idx){
   }
 
   showEvent({
+    local:true,
     kind:'buy', title:(owner?t('ownedTitle'):t('unownedTitle')), ico:ico, band:bandCol,
     text:sq.n,
     eff:(owner?t('ownerLabel')+': '+effHtml:effHtml), cls:cls,
@@ -2332,6 +2401,7 @@ function inspectSquare(idx){
 /* the inspector is a read-only view – put controls back exactly as they were */
 function restoreAfterInspect(){
   renderPlayers();
+  if(NET.isClient()){ updateRollLabel(); return; }
   const canRoll = players.length && !rolled && !moving && !turnEnding &&
                   !(players[current] && players[current].bankrupt);
   setCtrl(!!canRoll,false,false);
@@ -2509,6 +2579,7 @@ function confirmRestart(){
   if(typeof SFX!=='undefined') SFX.click();
   if(!players.length){ location.reload(); return; }   // still on the setup screen
   showEvent({
+    local:true,
     kind:'jail', titleKey:'restartTitle', title:t('restartTitle'), ico:'↻',
     text:t('restartText'), eff:'', cls:'',
     btnKey:'restartYes', btn:t('restartYes'),
