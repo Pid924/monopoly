@@ -13,7 +13,7 @@ body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP','Noto 
 
 /* ── BOARD ── */
 #board-container{position:relative;width:782px;height:782px;flex-shrink:0}
-#board{transform-style:preserve-3d;width:782px;height:782px;display:grid;grid-template-columns:112px repeat(9,62px) 112px;grid-template-rows:112px repeat(9,62px) 112px;border:3px solid #1b3a0a;background:#f5f0dc;font-family:'Georgia',serif}
+#board{width:782px;height:782px;display:grid;grid-template-columns:112px repeat(9,62px) 112px;grid-template-rows:112px repeat(9,62px) 112px;border:3px solid #1b3a0a;background:#f5f0dc;font-family:'Georgia',serif}
 
 /* cells */
 .cell{border:1px solid #1b3a0a;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -56,10 +56,10 @@ body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP','Noto 
 .cell-tax{background:#f3e5f5}
 
 /* center */
-#center{transform-style:preserve-3d;position:relative;z-index:1;grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#f5f0dc;padding:10px}
-#center-logo{font-size:44px;font-weight:700;color:#1b3a0a;letter-spacing:7px;text-transform:uppercase;font-style:italic;text-align:center;line-height:1.1;border:4px solid #1b3a0a;padding:10px 24px}
-#center-sub{font-size:11px;letter-spacing:3px;color:#555;text-transform:uppercase}
-#dice-area{display:flex;gap:24px;margin-top:10px;perspective:400px;transform-style:preserve-3d}
+#center{position:relative;z-index:1;grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#f5f0dc;padding:10px}
+#center-logo{transform:translateZ(1px);backface-visibility:hidden;font-size:44px;font-weight:700;color:#1b3a0a;letter-spacing:7px;text-transform:uppercase;font-style:italic;text-align:center;line-height:1.1;border:4px solid #1b3a0a;padding:10px 24px;max-width:94%;box-sizing:border-box}
+#center-sub{transform:translateZ(1px);backface-visibility:hidden;font-size:11px;letter-spacing:3px;color:#555;text-transform:uppercase}
+#dice-area{display:flex;gap:24px;margin-top:10px;perspective:400px}
 
 /* ── 3D DICE ── */
 .die-wrap{position:relative;width:56px;height:56px;perspective:280px;cursor:default;
@@ -138,7 +138,7 @@ body{font-family:'Georgia','Noto Sans Thai','Noto Sans SC','Noto Sans JP','Noto 
 /* ── PIECES ── */
 .piece{position:absolute;width:26px;height:26px;border-radius:50%;border:2.5px solid white;
   display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;
-  z-index:10;pointer-events:none;transform-style:preserve-3d;
+  z-index:10;pointer-events:none;
   box-shadow:0 3px 10px rgba(0,0,0,.55),
              inset 0 -2px 4px rgba(0,0,0,.30),
              inset 0 2px 3px rgba(255,255,255,.35);
@@ -248,9 +248,17 @@ button:disabled{opacity:.35;cursor:default}
 /* ── 3D VIEW ── */
 #scene{perspective:900px;perspective-origin:50% 10%}
 #board-container{
-  transform-style:preserve-3d;
+  transform-style:flat;          /* upgraded to preserve-3d only in 3D view */
   transition:transform .6s cubic-bezier(.4,0,.2,1),box-shadow .6s;
 }
+/* the 3D context exists only while the board is tilted */
+#board-container.view3d,
+#board-container.view3d #board,
+#board-container.view3d #center,
+#board-container.view3d #dice-area,
+#board-container.view3d .piece{transform-style:preserve-3d}
+/* lift the centre panel clear of the board plane so the two can't z-fight */
+#board-container.view3d #center{transform:translateZ(2px)}
 #board-container.view3d{
   transform:rotateX(50deg) rotateZ(calc(-2deg + var(--board-rot,0deg))) scale(0.92);
   box-shadow:0 60px 80px rgba(0,0,0,.55),0 20px 30px rgba(0,0,0,.4);
@@ -356,7 +364,7 @@ button:disabled{opacity:.35;cursor:default}
   .corner .corner-label{font-size:15px;line-height:1.15}
   .corner .corner-icon{font-size:40px;margin-bottom:2px}
   .corner .corner-label span{font-size:11px !important}
-  #center-logo{font-size:56px;letter-spacing:8px;padding:12px 28px}
+  #center-logo{font-size:clamp(30px,7vw,54px);letter-spacing:6px;padding:10px 18px}
   #center-sub{font-size:15px}
   /* Restart / Leave sits above the logo, inside the board centre */
 .center-restart{
@@ -498,6 +506,7 @@ button:disabled{opacity:.35;cursor:default}
 .center-roll:active:not(:disabled){transform:translateY(1px);box-shadow:0 2px 4px rgba(0,0,0,.25)}
 .center-roll:disabled{opacity:.35;cursor:default;box-shadow:none}
 #turn-hint{
+  transform:translateZ(1px);
   margin-top:7px;font-size:10px;font-family:sans-serif;color:#6b7a5a;
   letter-spacing:.5px;min-height:13px;text-align:center;
 }
@@ -673,7 +682,7 @@ button:disabled{opacity:.35;cursor:default}
 <!-- top toolbar -->
 <div id="topbar">
   <div class="tb-title">
-    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.6</span>
+    <span class="tb-brand" id="tb-brand">MONOPOLY</span><span id="tb-version">v1.7</span>
   </div>
   <div class="tb-controls">
   <div class="tb-group">
@@ -817,7 +826,7 @@ const LANGS={
     cancelBtn:'← Cancel', leaveOnline:'🚪 Leave room', leaveTitle:'🚪 Leave the room',
     leaveText:'Leave this online game? The computer will take over your player.',
     leaveYes:'Leave', leftRoom:'left the room', youLeft:'You left the room — playing offline',
-    aiTookOver:'🤖 Computer is now playing', version:'v1.6',
+    aiTookOver:'🤖 Computer is now playing', version:'v1.7',
     youTag:'you',
     playMode:'How do you want to play?', playLocal:'🎲 Play on this device', playOnline:'🌐 Play online with friends',
     yourName:'Your name', createRoom:'Create room', joinBtn:'Join', roomCode:'Room code',
@@ -870,7 +879,7 @@ const LANGS={
     cancelBtn:'← ยกเลิก', leaveOnline:'🚪 ออกจากห้อง', leaveTitle:'🚪 ออกจากห้องออนไลน์',
     leaveText:'ต้องการออกจากเกมออนไลน์หรือไม่? คอมพิวเตอร์จะเล่นแทนคุณ',
     leaveYes:'ออก', leftRoom:'ออกจากห้องแล้ว', youLeft:'คุณออกจากห้องแล้ว — เล่นออฟไลน์ต่อ',
-    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.6',
+    aiTookOver:'🤖 คอมพิวเตอร์เล่นแทนแล้ว', version:'v1.7',
     youTag:'คุณ',
     playMode:'ต้องการเล่นแบบไหน?', playLocal:'🎲 เล่นบนเครื่องนี้', playOnline:'🌐 เล่นออนไลน์กับเพื่อน',
     yourName:'ชื่อของคุณ', createRoom:'สร้างห้อง', joinBtn:'เข้าร่วม', roomCode:'รหัสห้อง',
@@ -923,7 +932,7 @@ const LANGS={
     cancelBtn:'← Abbrechen', leaveOnline:'🚪 Raum verlassen', leaveTitle:'🚪 Raum verlassen',
     leaveText:'Dieses Online-Spiel verlassen? Der Computer übernimmt deine Figur.',
     leaveYes:'Verlassen', leftRoom:'hat den Raum verlassen', youLeft:'Du hast den Raum verlassen — offline weiter',
-    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.6',
+    aiTookOver:'🤖 Der Computer spielt jetzt', version:'v1.7',
     youTag:'du',
     playMode:'Wie möchtest du spielen?', playLocal:'🎲 Auf diesem Gerät spielen', playOnline:'🌐 Online mit Freunden',
     yourName:'Dein Name', createRoom:'Raum erstellen', joinBtn:'Beitreten', roomCode:'Raumcode',
@@ -976,7 +985,7 @@ const LANGS={
     cancelBtn:'← Annuleren', leaveOnline:'🚪 Kamer verlaten', leaveTitle:'🚪 Kamer verlaten',
     leaveText:'Dit online spel verlaten? De computer neemt jouw speler over.',
     leaveYes:'Verlaten', leftRoom:'heeft de kamer verlaten', youLeft:'Je hebt de kamer verlaten — offline verder',
-    aiTookOver:'🤖 De computer speelt nu', version:'v1.6',
+    aiTookOver:'🤖 De computer speelt nu', version:'v1.7',
     youTag:'jij',
     playMode:'Hoe wil je spelen?', playLocal:'🎲 Op dit apparaat spelen', playOnline:'🌐 Online met vrienden',
     yourName:'Jouw naam', createRoom:'Kamer maken', joinBtn:'Meedoen', roomCode:'Kamercode',
